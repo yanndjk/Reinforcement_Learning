@@ -1,0 +1,25 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# macOS artifacts
+__MACOSX/
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db

@@ -1,0 +1,139 @@
+{
+  "config": {
+    "total_steps": 500000,
+    "rollout_steps": 2048,
+    "lr": 0.0003,
+    "gamma": 0.99,
+    "lam": 0.95,
+    "clip_eps": 0.2,
+    "vf_coef": 0.5,
+    "ent_coef": 0.01,
+    "n_epochs": 4,
+    "log_interval": 10,
+    "save_interval": 50000,
+    "save_dir": "checkpoints"
+  },
+  "validation": [
+    {
+      "finish_rate": 1.0,
+      "fall_rate": 0.0,
+      "avg_gates_passed": 8.0,
+      "avg_gates_missed": 0.0,
+      "perfect_run_rate": 1.0,
+      "avg_score": 480.0,
+      "avg_reward": 943.592383387575,
+      "step": 51200,
+      "seed": 2
+    },
+    {
+      "finish_rate": 1.0,
+      "fall_rate": 0.0,
+      "avg_gates_passed": 8.0,
+      "avg_gates_missed": 0.0,
+      "perfect_run_rate": 1.0,
+      "avg_score": 480.0,
+      "avg_reward": 943.5335066343235,
+      "step": 100352,
+      "seed": 2
+    },
+    {
+      "finish_rate": 1.0,
+      "fall_rate": 0.0,
+      "avg_gates_passed": 8.0,
+      "avg_gates_missed": 0.0,
+      "perfect_run_rate": 1.0,
+      "avg_score": 480.0,
+      "avg_reward": 943.5175162895773,
+      "step": 151552,
+      "seed": 2
+    },
+    {
+      "finish_rate": 1.0,
+      "fall_rate": 0.0,
+      "avg_gates_passed": 8.0,
+      "avg_gates_missed": 0.0,
+      "perfect_run_rate": 1.0,
+      "avg_score": 480.0,
+      "avg_reward": 943.5819344640355,
+      "step": 200704,
+      "seed": 2
+    },
+    {
+      "finish_rate": 1.0,
+      "fall_rate": 0.0,
+      "avg_gates_passed": 8.0,
+      "avg_gates_missed": 0.0,
+      "perfect_run_rate": 1.0,
+      "avg_score": 480.0,
+      "avg_reward": 943.599518420973,
+      "step": 251904,
+      "seed": 2
+    },
+    {
+      "finish_rate": 1.0,
+      "fall_rate": 0.0,
+      "avg_gates_passed": 8.0,
+      "avg_gates_missed": 0.0,
+      "perfect_run_rate": 1.0,
+      "avg_score": 480.0,
+      "avg_reward": 943.6125827702803,
+      "step": 301056,
+      "seed": 2
+    },
+    {
+      "finish_rate": 1.0,
+      "fall_rate": 0.0,
+      "avg_gates_passed": 8.0,
+      "avg_gates_missed": 0.0,
+      "perfect_run_rate": 1.0,
+      "avg_score": 480.0,
+      "avg_reward": 943.5968328097263,
+      "step": 350208,
+      "seed": 2
+    },
+    {
+      "finish_rate": 1.0,
+      "fall_rate": 0.0,
+      "avg_gates_passed": 8.0,
+      "avg_gates_missed": 0.0,
+      "perfect_run_rate": 1.0,
+      "avg_score": 480.0,
+      "avg_reward": 943.6246029743576,
+      "step": 401408,
+      "seed": 2
+    },
+    {
+      "finish_rate": 1.0,
+      "fall_rate": 0.0,
+      "avg_gates_passed": 8.0,
+      "avg_gates_missed": 0.0,
+      "perfect_run_rate": 1.0,
+      "avg_score": 480.0,
+      "avg_reward": 943.5578799344366,
+      "step": 450560,
+      "seed": 2
+    },
+    {
+      "finish_rate": 1.0,
+      "fall_rate": 0.0,
+      "avg_gates_passed": 8.0,
+      "avg_gates_missed": 0.0,
+      "perfect_run_rate": 1.0,
+      "avg_score": 480.0,
+      "avg_reward": 943.5190806290382,
+      "step": 501760,
+      "seed": 2
+    },
+    {
+      "finish_rate": 1.0,
+      "fall_rate": 0.0,
+      "avg_gates_passed": 8.0,
+      "avg_gates_missed": 0.0,
+      "perfect_run_rate": 1.0,
+      "avg_score": 480.0,
+      "avg_reward": 943.5148711004022,
+      "step": 501760,
+      "seed": 2
+    }
+  ]
+}
