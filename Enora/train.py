@@ -174,7 +174,8 @@ def train(render: bool = False, seed: int = 0):
     # Save all metrics and training curve for this seed
     metrics_path = run_dir / "metrics.json"
     with open(metrics_path, "w") as f:
-        json.dump({"config": CFG, "validation": metrics_log}, f, indent=2)
+        json.dump({"config": CFG, "validation": metrics_log,
+                   "episode_rewards": ep_rewards}, f, indent=2)
     print(f"  ↳ Metrics saved to {metrics_path}")
 
     _plot_training(ep_rewards, seed=seed)
@@ -193,7 +194,7 @@ def validate(policy, device, n_episodes: int = 20, render_mode=None,
     policy.eval()
 
     results = {
-        "reward": [], "reached": [], "fell": [],
+        "reward": [], "reached": [], "fell": [], "timeout": [],
         "gates_passed": [], "gates_missed": [],
         "perfect_run": [], "score": [],
     }
@@ -216,6 +217,7 @@ def validate(policy, device, n_episodes: int = 20, render_mode=None,
         results["reward"].append(total_reward)
         results["reached"].append(float(info.get("reached", False)))
         results["fell"].append(float(info.get("fell", False)))
+        results["timeout"].append(float(info.get("timeout", False)))
         results["gates_passed"].append(info.get("gates_passed", 0))
         results["gates_missed"].append(info.get("gates_missed", 0))
         results["perfect_run"].append(float(info.get("perfect_run", False)))
@@ -228,6 +230,7 @@ def validate(policy, device, n_episodes: int = 20, render_mode=None,
         "difficulty":        difficulty,
         "finish_rate":       np.mean(results["reached"]),
         "fall_rate":         np.mean(results["fell"]),
+        "timeout_rate":      np.mean(results["timeout"]),
         "avg_gates_passed":  np.mean(results["gates_passed"]),
         "avg_gates_missed":  np.mean(results["gates_missed"]),
         "perfect_run_rate":  np.mean(results["perfect_run"]),
@@ -244,6 +247,7 @@ def print_validation(metrics, step):
         f"  VALIDATION @ step {step}  (difficulty={diff:.2f})\n"
         f"  Finish rate:      {metrics['finish_rate']:>6.1%}\n"
         f"  Fall rate:        {metrics['fall_rate']:>6.1%}\n"
+        f"  Timeout rate:     {metrics['timeout_rate']:>6.1%}\n"
         f"  Avg gates passed: {metrics['avg_gates_passed']:>6.1f}\n"
         f"  Avg gates missed: {metrics['avg_gates_missed']:>6.1f}\n"
         f"  Perfect run rate: {metrics['perfect_run_rate']:>6.1%}\n"
@@ -322,7 +326,8 @@ CURRICULUM_STRATEGIES = {
         start_difficulty  = 0.0,
         max_difficulty    = 1.0,
         difficulty_step   = 0.05,
-        promote_threshold = 0.75,
+        promote_threshold = 0.75,        # gate pass rate
+        promote_finish    = 0.80,        # finish rate
         promote_window    = 3,
         eval_interval     = 20_000,
         regress_threshold = 0.6,
@@ -335,7 +340,8 @@ CURRICULUM_STRATEGIES = {
         start_difficulty  = 0.0,
         max_difficulty    = 1.0,
         difficulty_step   = 0.10,
-        promote_threshold = 0.60,
+        promote_threshold = 0.60,        # gate pass rate
+        promote_finish    = 0.70,        # finish rate
         promote_window    = 2,
         eval_interval     = 15_000,
         regress_threshold = 0.5,
@@ -348,7 +354,8 @@ CURRICULUM_STRATEGIES = {
         start_difficulty  = 0.0,
         max_difficulty    = 1.0,
         difficulty_step   = 0.10,
-        promote_threshold = 0.60,
+        promote_threshold = 0.60,        # gate pass rate
+        promote_finish    = 0.70,        # finish rate
         promote_window    = 2,
         eval_interval     = 15_000,
         regress_threshold = 0.5,
@@ -363,7 +370,8 @@ CURRICULUM_STRATEGIES = {
         start_difficulty  = 0.0,
         max_difficulty    = 1.0,
         difficulty_step   = 0.05,        # half the mixed jump
-        promote_threshold = 0.70,        # stricter than mixed
+        promote_threshold = 0.70,        # gate pass rate — stricter than mixed
+        promote_finish    = 0.80,        # finish rate
         promote_window    = 3,           # must prove consistency
         eval_interval     = 15_000,
         regress_threshold = 0.5,
@@ -441,7 +449,8 @@ def train_curriculum(seed: int = 0, checkpoint: str | None = None,
     print(f"Curriculum training on {device}  |  seed={seed}  "
           f"strategy={strategy}  start={warm_tag}")
     print(f"  Config: step={cur_cfg['difficulty_step']}  "
-          f"promote={cur_cfg['promote_threshold']:.0%}x{cur_cfg['promote_window']}  "
+          f"promote=gates≥{cur_cfg['promote_threshold']:.0%}+finish≥{cur_cfg['promote_finish']:.0%}"
+          f"x{cur_cfg['promote_window']}  "
           f"sampling={cur_cfg['sampling']}")
 
     while global_step < total_steps:
@@ -519,25 +528,31 @@ def train_curriculum(seed: int = 0, checkpoint: str | None = None,
                               difficulty=0.0)
 
             gate_rate = m_curr["avg_gates_passed"] / env.n_gates
+            finish_rate = m_curr["finish_rate"]
             base_gate_rate = m_base["avg_gates_passed"] / env.n_gates
+
+            finish_thresh = cur_cfg["promote_finish"]
 
             print(
                 f"\n  CURRICULUM CHECK @ step {global_step}  "
                 f"(target diff={difficulty:.2f})\n"
                 f"    Current diff:  gates={m_curr['avg_gates_passed']:.1f}/{env.n_gates}  "
-                f"({gate_rate:.0%})  finish={m_curr['finish_rate']:.0%}\n"
+                f"({gate_rate:.0%})  finish={finish_rate:.0%}\n"
                 f"    Regression d=0: gates={m_base['avg_gates_passed']:.1f}/{env.n_gates}  "
                 f"({base_gate_rate:.0%})  finish={m_base['finish_rate']:.0%}"
             )
 
-            # Promotion logic
+            # Promotion logic — both gate rate AND finish rate must meet threshold
             regressing = base_gate_rate < cur_cfg["regress_threshold"]
+            gates_ok = gate_rate >= cur_cfg["promote_threshold"]
+            finish_ok = finish_rate >= finish_thresh
+
             if regressing:
                 promote_count = 0
                 print(f"    >> HOLDING — regression at d=0.0 "
                       f"(gate rate {base_gate_rate:.0%} < "
                       f"{cur_cfg['regress_threshold']:.0%})")
-            elif gate_rate >= cur_cfg["promote_threshold"]:
+            elif gates_ok and finish_ok:
                 promote_count += 1
                 if promote_count >= cur_cfg["promote_window"]:
                     old_diff = difficulty
@@ -552,8 +567,12 @@ def train_curriculum(seed: int = 0, checkpoint: str | None = None,
                           f"{promote_count}/{cur_cfg['promote_window']}")
             else:
                 promote_count = 0
-                print(f"    >> Not ready (gate rate {gate_rate:.0%} < "
-                      f"{cur_cfg['promote_threshold']:.0%})")
+                reasons = []
+                if not gates_ok:
+                    reasons.append(f"gates {gate_rate:.0%} < {cur_cfg['promote_threshold']:.0%}")
+                if not finish_ok:
+                    reasons.append(f"finish {finish_rate:.0%} < {finish_thresh:.0%}")
+                print(f"    >> Not ready ({', '.join(reasons)})")
 
             metrics_log.append({
                 "current": m_curr,
@@ -583,6 +602,7 @@ def train_curriculum(seed: int = 0, checkpoint: str | None = None,
         "seed": seed,
         "difficulty_history": difficulty_history,
         "evaluations": metrics_log,
+        "episode_rewards": ep_rewards,
     }
     metrics_path = run_dir / "curriculum_metrics.json"
     with open(metrics_path, "w") as f:
@@ -604,6 +624,7 @@ def train_curriculum(seed: int = 0, checkpoint: str | None = None,
 
     _plot_curriculum(difficulty_history, metrics_log, difficulties, sweep,
                      run_dir, seed, strategy, cur_cfg)
+    _plot_episode_rewards(ep_rewards, run_dir, seed, strategy)
 
     print(f"\nCurriculum training complete (seed={seed}, strategy={strategy}, "
           f"final difficulty={difficulty:.2f}).")
@@ -660,6 +681,26 @@ def _plot_curriculum(diff_history, eval_log, sweep_diffs, sweep_results,
     fig.savefig(save_path, dpi=150)
     plt.close(fig)
     print(f"  ↳ Curriculum plot saved to {save_path}")
+
+
+def _plot_episode_rewards(rewards, run_dir, seed, strategy):
+    """Plot per-episode rewards with smoothing and save to run directory."""
+    if len(rewards) < 2:
+        return
+    window = min(20, len(rewards))
+    smoothed = np.convolve(rewards, np.ones(window) / window, mode="valid")
+    plt.figure(figsize=(10, 4))
+    plt.plot(rewards,  alpha=0.3, label="Episode reward")
+    plt.plot(smoothed, linewidth=2, label=f"Smoothed ({window}-ep)")
+    plt.xlabel("Episode")
+    plt.ylabel("Total reward")
+    plt.title(f"Episode Rewards — {strategy} (seed={seed})")
+    plt.legend()
+    plt.tight_layout()
+    save_path = run_dir / "episode_rewards.png"
+    plt.savefig(save_path, dpi=150)
+    plt.close()
+    print(f"  ↳ Episode rewards plot saved to {save_path}")
 
 
 # ------------------------------------------------------------------

@@ -48,13 +48,14 @@ class SkiEnv(gym.Env):
     # --- Track ---
     SLOPE_LENGTH = 120.0         # longer slope for more gate spacing
     TRACK_WIDTH  = 10.0          # wider track for larger gate offsets
-    N_GATES_DEFAULT = 8
+    N_GATES_DEFAULT = 4
 
-    # --- Scoring ---
-    GATE_PASS_REWARD  =  60.0
-    FINISH_BONUS      = 200.0
-    SPEED_BONUS_RATE  =   0.3
-    FALL_PENALTY      =  80.0
+    # --- Scoring (survival-first, gates secondary) ---
+    GATE_PASS_REWARD  =  15.0    # reduced — don't tempt risky maneuvers
+    FINISH_BONUS      = 500.0    # dominant goal: get down the slope alive
+    SPEED_BONUS_RATE  =   0.1    # small bonus for finishing fast
+    FALL_PENALTY      = 300.0    # crashing is catastrophic
+    SAFE_SPEED        =  15.0    # speed above this gets penalised during turns
 
     def __init__(self, render_mode=None, n_gates=N_GATES_DEFAULT, difficulty=0.0):
         super().__init__()
@@ -104,8 +105,10 @@ class SkiEnv(gym.Env):
 
     @property
     def gate_y_tolerance(self):
-        """Y-window to detect gate crossing."""
-        return 2.0 - self.difficulty * 0.8   # 2.0 -> 1.2
+        """Y-window to detect gate crossing. Loosened to isolate steering
+        quality from crossing-timing sensitivity during early training.
+        Tighten later once steering is reliable."""
+        return 3.0 - self.difficulty * 1.0   # 3.0 -> 2.0
 
     # ------------------------------------------------------------------
     # Gym interface
@@ -210,7 +213,8 @@ class SkiEnv(gym.Env):
         gate_reward = self._check_gates(x, y)
         reward = self._compute_reward(
             x, y, vx, vy, heading, speed_new,
-            crashed, out_OOB, reached, gate_reward, brake
+            crashed, out_OOB, reached, gate_reward,
+            centripetal, steer
         )
 
         n_passed = sum(self.gates_passed)
@@ -222,6 +226,7 @@ class SkiEnv(gym.Env):
             "perfect_run":   reached and n_missed == 0,
             "reached":       reached,
             "fell":          crashed or out_OOB,
+            "timeout":       truncated,
             "steps":         self.step_count,
             "difficulty":    self.difficulty,
             "speed":         speed_new,
@@ -239,24 +244,45 @@ class SkiEnv(gym.Env):
     # ------------------------------------------------------------------
 
     def _compute_reward(self, x, y, vx, vy, heading, speed,
-                        crashed, out_OOB, reached, gate_reward, brake):
+                        crashed, out_OOB, reached, gate_reward,
+                        centripetal, steer):
         reward = 0.0
 
-        # 1. Forward progress (dense) — reward downhill speed
-        reward += vy * self.DT * 0.8
+        # --- Priority 1: Survival ---
 
-        # 2. Alignment toward next gate (dense)
+        # 1a. Alive bonus — every step not crashed is good
+        reward += 0.15
+
+        # 1b. Crash danger shaping — penalise approaching the wipeout threshold
+        #     Ramps from 0 at 50% of limit to -0.5 at the limit
+        danger = centripetal / self.CRASH_LATERAL_G   # 0 → 1+
+        if danger > 0.5:
+            reward -= 1.0 * (danger - 0.5)
+
+        # --- Priority 2: Finish the run ---
+
+        # 2a. Forward progress — gentle downhill incentive
+        reward += vy * self.DT * 0.5
+
+        # --- Priority 3: Safe turning & speed management ---
+
+        # 3a. Penalise high speed during sharp turns
+        #     (teaches brake-before-turn coordination)
+        if speed > self.SAFE_SPEED and abs(steer) > 0.3:
+            excess = (speed - self.SAFE_SPEED) / self.MAX_SPEED
+            reward -= 0.3 * excess * abs(steer)
+
+        # --- Priority 4: Gates (reduced — survival first) ---
+
+        # 4a. Alignment toward next gate (very light)
         gx = self._next_gate_x(y)
-        alignment_weight = 0.05 + 0.15 * self.difficulty
+        alignment_weight = 0.02 + 0.03 * self.difficulty
         reward -= alignment_weight * abs(x - gx) * self.DT
 
-        # 3. Small brake penalty — discourage constant braking
-        reward -= 0.02 * brake
-
-        # 4. Gate outcome (dominant sparse signal)
+        # 4b. Gate outcome (sparse, reduced magnitude)
         reward += gate_reward
 
-        # 5. Terminal
+        # --- Terminal ---
         if reached:
             steps_remaining = self.MAX_STEPS - self.step_count
             reward += self.FINISH_BONUS + steps_remaining * self.SPEED_BONUS_RATE

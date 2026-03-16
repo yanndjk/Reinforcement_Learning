@@ -172,7 +172,8 @@ def train(render: bool = False, seed: int = 0):
     # Save all metrics and training curve for this seed
     metrics_path = run_dir / "metrics.json"
     with open(metrics_path, "w") as f:
-        json.dump({"config": CFG, "validation": metrics_log}, f, indent=2)
+        json.dump({"config": CFG, "validation": metrics_log,
+                   "episode_rewards": ep_rewards}, f, indent=2)
     print(f"  ↳ Metrics saved to {metrics_path}")
 
     _plot_training(ep_rewards, seed=seed)
@@ -581,6 +582,7 @@ def train_curriculum(seed: int = 0, checkpoint: str | None = None,
         "seed": seed,
         "difficulty_history": difficulty_history,
         "evaluations": metrics_log,
+        "episode_rewards": ep_rewards,
     }
     metrics_path = run_dir / "curriculum_metrics.json"
     with open(metrics_path, "w") as f:
@@ -602,6 +604,7 @@ def train_curriculum(seed: int = 0, checkpoint: str | None = None,
 
     _plot_curriculum(difficulty_history, metrics_log, difficulties, sweep,
                      run_dir, seed, strategy, cur_cfg)
+    _plot_episode_rewards(ep_rewards, run_dir, seed, strategy)
 
     print(f"\nCurriculum training complete (seed={seed}, strategy={strategy}, "
           f"final difficulty={difficulty:.2f}).")
@@ -658,6 +661,26 @@ def _plot_curriculum(diff_history, eval_log, sweep_diffs, sweep_results,
     fig.savefig(save_path, dpi=150)
     plt.close(fig)
     print(f"  ↳ Curriculum plot saved to {save_path}")
+
+
+def _plot_episode_rewards(rewards, run_dir, seed, strategy):
+    """Plot per-episode rewards with smoothing and save to run directory."""
+    if len(rewards) < 2:
+        return
+    window = min(20, len(rewards))
+    smoothed = np.convolve(rewards, np.ones(window) / window, mode="valid")
+    plt.figure(figsize=(10, 4))
+    plt.plot(rewards,  alpha=0.3, label="Episode reward")
+    plt.plot(smoothed, linewidth=2, label=f"Smoothed ({window}-ep)")
+    plt.xlabel("Episode")
+    plt.ylabel("Total reward")
+    plt.title(f"Episode Rewards — {strategy} (seed={seed})")
+    plt.legend()
+    plt.tight_layout()
+    save_path = run_dir / "episode_rewards.png"
+    plt.savefig(save_path, dpi=150)
+    plt.close()
+    print(f"  ↳ Episode rewards plot saved to {save_path}")
 
 
 # ------------------------------------------------------------------
