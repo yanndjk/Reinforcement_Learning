@@ -1,0 +1,2223 @@
+{
+  "config": {
+    "total_steps": 500000,
+    "rollout_steps": 2048,
+    "lr": 0.0003,
+    "gamma": 0.99,
+    "lam": 0.95,
+    "clip_eps": 0.2,
+    "vf_coef": 0.5,
+    "ent_coef": 0.01,
+    "n_epochs": 4,
+    "log_interval": 10,
+    "save_interval": 50000,
+    "save_dir": "checkpoints"
+  },
+  "curriculum_config": {
+    "total_steps": 1500000,
+    "start_difficulty": 0.0,
+    "max_difficulty": 1.0,
+    "difficulty_step": 0.05,
+    "promote_threshold": 0.7,
+    "promote_window": 3,
+    "eval_interval": 15000,
+    "regress_threshold": 0.5,
+    "sampling": "range",
+    "sampling_spread": 0.08
+  },
+  "strategy": "focused",
+  "warm_start": null,
+  "seed": 0,
+  "difficulty_history": [
+    [
+      16384,
+      0.0
+    ],
+    [
+      32768,
+      0.0
+    ],
+    [
+      49152,
+      0.0
+    ],
+    [
+      65536,
+      0.0
+    ],
+    [
+      81920,
+      0.0
+    ],
+    [
+      98304,
+      0.0
+    ],
+    [
+      114688,
+      0.0
+    ],
+    [
+      131072,
+      0.0
+    ],
+    [
+      147456,
+      0.0
+    ],
+    [
+      163840,
+      0.0
+    ],
+    [
+      180224,
+      0.0
+    ],
+    [
+      196608,
+      0.0
+    ],
+    [
+      212992,
+      0.0
+    ],
+    [
+      229376,
+      0.0
+    ],
+    [
+      245760,
+      0.0
+    ],
+    [
+      262144,
+      0.0
+    ],
+    [
+      278528,
+      0.0
+    ],
+    [
+      294912,
+      0.0
+    ],
+    [
+      311296,
+      0.0
+    ],
+    [
+      327680,
+      0.0
+    ],
+    [
+      344064,
+      0.0
+    ],
+    [
+      360448,
+      0.0
+    ],
+    [
+      376832,
+      0.0
+    ],
+    [
+      393216,
+      0.0
+    ],
+    [
+      409600,
+      0.0
+    ],
+    [
+      425984,
+      0.0
+    ],
+    [
+      442368,
+      0.0
+    ],
+    [
+      458752,
+      0.0
+    ],
+    [
+      475136,
+      0.0
+    ],
+    [
+      491520,
+      0.0
+    ],
+    [
+      507904,
+      0.0
+    ],
+    [
+      524288,
+      0.0
+    ],
+    [
+      540672,
+      0.0
+    ],
+    [
+      557056,
+      0.0
+    ],
+    [
+      573440,
+      0.0
+    ],
+    [
+      589824,
+      0.0
+    ],
+    [
+      606208,
+      0.0
+    ],
+    [
+      622592,
+      0.0
+    ],
+    [
+      638976,
+      0.0
+    ],
+    [
+      655360,
+      0.0
+    ],
+    [
+      671744,
+      0.0
+    ],
+    [
+      688128,
+      0.0
+    ],
+    [
+      704512,
+      0.0
+    ],
+    [
+      720896,
+      0.0
+    ],
+    [
+      737280,
+      0.0
+    ],
+    [
+      753664,
+      0.0
+    ],
+    [
+      770048,
+      0.0
+    ],
+    [
+      786432,
+      0.0
+    ],
+    [
+      802816,
+      0.0
+    ],
+    [
+      819200,
+      0.0
+    ],
+    [
+      835584,
+      0.0
+    ],
+    [
+      851968,
+      0.0
+    ],
+    [
+      868352,
+      0.0
+    ],
+    [
+      884736,
+      0.0
+    ],
+    [
+      901120,
+      0.0
+    ],
+    [
+      917504,
+      0.0
+    ],
+    [
+      933888,
+      0.0
+    ],
+    [
+      950272,
+      0.0
+    ],
+    [
+      966656,
+      0.05
+    ],
+    [
+      983040,
+      0.05
+    ],
+    [
+      999424,
+      0.05
+    ],
+    [
+      1015808,
+      0.1
+    ],
+    [
+      1032192,
+      0.1
+    ],
+    [
+      1048576,
+      0.1
+    ],
+    [
+      1064960,
+      0.1
+    ],
+    [
+      1081344,
+      0.1
+    ],
+    [
+      1097728,
+      0.1
+    ],
+    [
+      1114112,
+      0.15000000000000002
+    ],
+    [
+      1130496,
+      0.15000000000000002
+    ],
+    [
+      1146880,
+      0.15000000000000002
+    ],
+    [
+      1163264,
+      0.15000000000000002
+    ],
+    [
+      1179648,
+      0.15000000000000002
+    ],
+    [
+      1196032,
+      0.15000000000000002
+    ],
+    [
+      1212416,
+      0.15000000000000002
+    ],
+    [
+      1228800,
+      0.15000000000000002
+    ],
+    [
+      1245184,
+      0.15000000000000002
+    ],
+    [
+      1261568,
+      0.15000000000000002
+    ],
+    [
+      1277952,
+      0.15000000000000002
+    ],
+    [
+      1294336,
+      0.15000000000000002
+    ],
+    [
+      1310720,
+      0.15000000000000002
+    ],
+    [
+      1327104,
+      0.15000000000000002
+    ],
+    [
+      1343488,
+      0.15000000000000002
+    ],
+    [
+      1359872,
+      0.15000000000000002
+    ],
+    [
+      1376256,
+      0.15000000000000002
+    ],
+    [
+      1392640,
+      0.15000000000000002
+    ],
+    [
+      1409024,
+      0.15000000000000002
+    ],
+    [
+      1425408,
+      0.15000000000000002
+    ],
+    [
+      1441792,
+      0.15000000000000002
+    ],
+    [
+      1458176,
+      0.15000000000000002
+    ],
+    [
+      1474560,
+      0.15000000000000002
+    ],
+    [
+      1490944,
+      0.15000000000000002
+    ],
+    [
+      1501184,
+      0.15000000000000002
+    ]
+  ],
+  "evaluations": [
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 1.0,
+        "avg_gates_passed": 2.0,
+        "avg_gates_missed": 1.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 100.0,
+        "avg_reward": 55.686413538800025,
+        "step": 16384,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.25,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.65,
+        "avg_gates_missed": 4.35,
+        "perfect_run_rate": 0.0,
+        "avg_score": 132.0,
+        "avg_reward": 202.50910500934035,
+        "step": 32768,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.44375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.0,
+        "avg_gates_missed": 4.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 160.0,
+        "avg_reward": 234.12452073610137,
+        "step": 49152,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.5,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.0,
+        "avg_gates_missed": 5.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 80.0,
+        "avg_reward": 145.88450353987298,
+        "step": 65536,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.0,
+        "avg_gates_missed": 4.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 160.0,
+        "avg_reward": 241.27143858258455,
+        "step": 81920,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.5,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.05,
+        "avg_gates_passed": 2.75,
+        "avg_gates_missed": 5.25,
+        "perfect_run_rate": 0.0,
+        "avg_score": 60.0,
+        "avg_reward": 130.3680804391087,
+        "step": 98304,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.35,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.0,
+        "avg_gates_missed": 4.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 100.0,
+        "avg_reward": 168.79756271856246,
+        "step": 114688,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 1.0,
+        "avg_gates_missed": 7.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": -80.0,
+        "avg_reward": -4.29492204135679,
+        "step": 131072,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.125,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 1.0,
+        "avg_gates_missed": 7.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": -80.0,
+        "avg_reward": -10.10997822666398,
+        "step": 147456,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.125,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 7.0,
+        "avg_gates_missed": 1.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 400.0,
+        "avg_reward": 476.24527694014057,
+        "step": 163840,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 7.05,
+        "avg_gates_missed": 0.95,
+        "perfect_run_rate": 0.0,
+        "avg_score": 404.0,
+        "avg_reward": 482.5651737741423,
+        "step": 180224,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.94375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.75,
+        "avg_gates_missed": 3.25,
+        "perfect_run_rate": 0.0,
+        "avg_score": 220.0,
+        "avg_reward": 300.16002258855485,
+        "step": 196608,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.59375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.8,
+        "avg_gates_missed": 4.2,
+        "perfect_run_rate": 0.0,
+        "avg_score": 144.0,
+        "avg_reward": 220.5104118216159,
+        "step": 212992,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.50625,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.6,
+        "avg_gates_missed": 4.4,
+        "perfect_run_rate": 0.0,
+        "avg_score": 128.0,
+        "avg_reward": 204.08178988672407,
+        "step": 229376,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.44375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.7,
+        "avg_gates_missed": 3.3,
+        "perfect_run_rate": 0.0,
+        "avg_score": 216.0,
+        "avg_reward": 293.9397159901697,
+        "step": 245760,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.5875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.8,
+        "avg_gates_missed": 4.2,
+        "perfect_run_rate": 0.0,
+        "avg_score": 144.0,
+        "avg_reward": 221.02925907658056,
+        "step": 262144,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.45,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 1.6,
+        "avg_gates_missed": 6.4,
+        "perfect_run_rate": 0.0,
+        "avg_score": -32.0,
+        "avg_reward": 41.690973458093204,
+        "step": 278528,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.2125,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.85,
+        "avg_gates_missed": 4.15,
+        "perfect_run_rate": 0.0,
+        "avg_score": 148.0,
+        "avg_reward": 220.99781860700432,
+        "step": 294912,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.45625,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.35,
+        "avg_gates_missed": 4.65,
+        "perfect_run_rate": 0.0,
+        "avg_score": 108.0,
+        "avg_reward": 181.30688864504424,
+        "step": 311296,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.4,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.45,
+        "avg_gates_missed": 2.55,
+        "perfect_run_rate": 0.0,
+        "avg_score": 276.0,
+        "avg_reward": 348.480613230746,
+        "step": 327680,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.65,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.65,
+        "avg_gates_missed": 4.35,
+        "perfect_run_rate": 0.0,
+        "avg_score": 132.0,
+        "avg_reward": 206.87361445232028,
+        "step": 344064,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.44375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.35,
+        "avg_gates_missed": 3.65,
+        "perfect_run_rate": 0.0,
+        "avg_score": 188.0,
+        "avg_reward": 266.75506914038107,
+        "step": 360448,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.5625,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.25,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.25,
+        "avg_gates_missed": 3.75,
+        "perfect_run_rate": 0.0,
+        "avg_score": 180.0,
+        "avg_reward": 312.02342881205135,
+        "step": 376832,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.60625,
+        "finish_rate": 0.2
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.6,
+        "avg_gates_missed": 2.4,
+        "perfect_run_rate": 0.0,
+        "avg_score": 288.0,
+        "avg_reward": 366.61881885494574,
+        "step": 393216,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.7,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.1,
+        "avg_gates_missed": 2.9,
+        "perfect_run_rate": 0.0,
+        "avg_score": 248.0,
+        "avg_reward": 325.10627423776816,
+        "step": 409600,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.65,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 1.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.85,
+        "avg_gates_missed": 3.15,
+        "perfect_run_rate": 0.0,
+        "avg_score": 228.0,
+        "avg_reward": 515.8567136766355,
+        "step": 425984,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.575,
+        "finish_rate": 1.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.85,
+        "avg_gates_missed": 3.15,
+        "perfect_run_rate": 0.0,
+        "avg_score": 228.0,
+        "avg_reward": 299.57934758222797,
+        "step": 442368,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.63125,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.8,
+        "avg_gates_missed": 4.2,
+        "perfect_run_rate": 0.0,
+        "avg_score": 144.0,
+        "avg_reward": 218.90118942438275,
+        "step": 458752,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.46875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 1.7,
+        "avg_gates_missed": 5.3,
+        "perfect_run_rate": 0.0,
+        "avg_score": -4.0,
+        "avg_reward": 58.24197803095618,
+        "step": 475136,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.2,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 7.0,
+        "avg_gates_missed": 1.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 400.0,
+        "avg_reward": 474.44441838813475,
+        "step": 491520,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 1.0,
+        "avg_gates_passed": 1.15,
+        "avg_gates_missed": 2.85,
+        "perfect_run_rate": 0.0,
+        "avg_score": 12.0,
+        "avg_reward": -34.90440616762479,
+        "step": 507904,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.175,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 1.0,
+        "avg_gates_passed": 3.0,
+        "avg_gates_missed": 3.4,
+        "perfect_run_rate": 0.0,
+        "avg_score": 112.0,
+        "avg_reward": 91.92549619478191,
+        "step": 524288,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 1.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.4,
+        "avg_gates_missed": 2.6,
+        "perfect_run_rate": 0.0,
+        "avg_score": 272.0,
+        "avg_reward": 556.95852728868,
+        "step": 540672,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.675,
+        "finish_rate": 1.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 7.15,
+        "avg_gates_missed": 0.85,
+        "perfect_run_rate": 0.0,
+        "avg_score": 412.0,
+        "avg_reward": 490.67889416514424,
+        "step": 557056,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.84375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.25,
+        "avg_gates_missed": 1.75,
+        "perfect_run_rate": 0.0,
+        "avg_score": 280.0,
+        "avg_reward": 348.67391788219976,
+        "step": 573440,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.6375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.1,
+        "avg_gates_missed": 3.9,
+        "perfect_run_rate": 0.0,
+        "avg_score": 168.0,
+        "avg_reward": 242.3217634837269,
+        "step": 589824,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.51875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 1.0,
+        "avg_gates_passed": 1.0,
+        "avg_gates_missed": 2.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 20.0,
+        "avg_reward": -31.60909355524664,
+        "step": 606208,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.125,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 1.0,
+        "avg_gates_passed": 4.0,
+        "avg_gates_missed": 3.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 180.0,
+        "avg_reward": 170.10254138301286,
+        "step": 622592,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.5,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 1.0,
+        "avg_gates_missed": 6.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": -60.0,
+        "avg_reward": 1.6071407591086218,
+        "step": 638976,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.125,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 1.0,
+        "avg_gates_passed": 3.0,
+        "avg_gates_missed": 3.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 120.0,
+        "avg_reward": 101.57699502943734,
+        "step": 655360,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 1.0,
+        "avg_gates_passed": 3.4,
+        "avg_gates_missed": 4.6,
+        "perfect_run_rate": 0.0,
+        "avg_score": 112.0,
+        "avg_reward": 111.24936169001725,
+        "step": 671744,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.425,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 1.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.25,
+        "avg_gates_missed": 4.75,
+        "perfect_run_rate": 0.0,
+        "avg_score": 100.0,
+        "avg_reward": 417.95905868174196,
+        "step": 688128,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.39375,
+        "finish_rate": 1.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 1.0,
+        "avg_gates_passed": 1.45,
+        "avg_gates_missed": 2.55,
+        "perfect_run_rate": 0.0,
+        "avg_score": 36.0,
+        "avg_reward": -6.386952486215904,
+        "step": 704512,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.1625,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.0,
+        "avg_gates_missed": 5.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 80.0,
+        "avg_reward": 150.5533490861314,
+        "step": 720896,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 6.0,
+        "avg_gates_missed": 2.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 320.0,
+        "avg_reward": 393.6244040934996,
+        "step": 737280,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.75,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 1.0,
+        "avg_gates_passed": 3.0,
+        "avg_gates_missed": 2.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 140.0,
+        "avg_reward": 110.31655503681513,
+        "step": 753664,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 1.0,
+        "avg_gates_passed": 2.75,
+        "avg_gates_missed": 3.25,
+        "perfect_run_rate": 0.0,
+        "avg_score": 100.0,
+        "avg_reward": 72.08575317896499,
+        "step": 770048,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.35,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 1.05,
+        "avg_gates_missed": 5.95,
+        "perfect_run_rate": 0.0,
+        "avg_score": -56.0,
+        "avg_reward": 5.618305551890591,
+        "step": 786432,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.13125,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 1.0,
+        "avg_gates_missed": 6.15,
+        "perfect_run_rate": 0.0,
+        "avg_score": -63.0,
+        "avg_reward": -0.03940617586487447,
+        "step": 802816,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.125,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.55,
+        "avg_gates_missed": 1.45,
+        "perfect_run_rate": 0.0,
+        "avg_score": 304.0,
+        "avg_reward": 368.4283704373859,
+        "step": 819200,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.64375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 2.9,
+        "avg_gates_missed": 4.1,
+        "perfect_run_rate": 0.0,
+        "avg_score": 92.0,
+        "avg_reward": 156.56869478361185,
+        "step": 835584,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.35625,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.0,
+        "avg_gates_missed": 5.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 80.0,
+        "avg_reward": 150.44818476425075,
+        "step": 851968,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.0,
+        "avg_gates_missed": 5.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 80.0,
+        "avg_reward": 151.06196580023118,
+        "step": 868352,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 1.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.8,
+        "avg_gates_missed": 3.2,
+        "perfect_run_rate": 0.0,
+        "avg_score": 224.0,
+        "avg_reward": 542.96954118616,
+        "step": 884736,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.5625,
+        "finish_rate": 1.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 1.0,
+        "avg_gates_passed": 4.0,
+        "avg_gates_missed": 2.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 200.0,
+        "avg_reward": 182.44460653468536,
+        "step": 901120,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.49375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 8.0,
+        "avg_gates_missed": 0.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 480.0,
+        "avg_reward": 552.4929411110049,
+        "step": 917504,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 1.0,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 8.0,
+        "avg_gates_missed": 0.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 480.0,
+        "avg_reward": 553.2350517756594,
+        "step": 933888,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 1.0,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.0
+    },
+    {
+      "current": {
+        "difficulty": 0.0,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 8.0,
+        "avg_gates_missed": 0.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 480.0,
+        "avg_reward": 553.1425341142444,
+        "step": 950272,
+        "curriculum_difficulty": 0.0
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 1.0,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.05
+    },
+    {
+      "current": {
+        "difficulty": 0.05,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 8.0,
+        "avg_gates_missed": 0.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 480.0,
+        "avg_reward": 552.5717348748642,
+        "step": 966656,
+        "curriculum_difficulty": 0.05
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 1.0,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.05
+    },
+    {
+      "current": {
+        "difficulty": 0.05,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 7.0,
+        "avg_gates_missed": 0.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 420.0,
+        "avg_reward": 489.7919791721991,
+        "step": 983040,
+        "curriculum_difficulty": 0.05
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.05
+    },
+    {
+      "current": {
+        "difficulty": 0.05,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 7.2,
+        "avg_gates_missed": 0.8,
+        "perfect_run_rate": 0.0,
+        "avg_score": 410.8,
+        "avg_reward": 482.8147565314274,
+        "step": 999424,
+        "curriculum_difficulty": 0.05
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.99375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.1
+    },
+    {
+      "current": {
+        "difficulty": 0.1,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.0,
+        "avg_gates_missed": 3.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 201.0,
+        "avg_reward": 271.27012580848526,
+        "step": 1015808,
+        "curriculum_difficulty": 0.1
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.56875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.1
+    },
+    {
+      "current": {
+        "difficulty": 0.1,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.0,
+        "avg_gates_missed": 4.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 108.0,
+        "avg_reward": 180.6898654101809,
+        "step": 1032192,
+        "curriculum_difficulty": 0.1
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.56875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.1
+    },
+    {
+      "current": {
+        "difficulty": 0.1,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.2,
+        "avg_gates_missed": 4.8,
+        "perfect_run_rate": 0.0,
+        "avg_score": 33.6,
+        "avg_reward": 107.83688523636215,
+        "step": 1048576,
+        "curriculum_difficulty": 0.1
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.70625,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.1
+    },
+    {
+      "current": {
+        "difficulty": 0.1,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.8,
+        "avg_gates_missed": 2.2,
+        "perfect_run_rate": 0.0,
+        "avg_score": 275.4,
+        "avg_reward": 345.1868447031277,
+        "step": 1064960,
+        "curriculum_difficulty": 0.1
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.7125,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.1
+    },
+    {
+      "current": {
+        "difficulty": 0.1,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.9,
+        "avg_gates_missed": 2.1,
+        "perfect_run_rate": 0.0,
+        "avg_score": 284.7,
+        "avg_reward": 355.93352778222436,
+        "step": 1081344,
+        "curriculum_difficulty": 0.1
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.75,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.1
+    },
+    {
+      "current": {
+        "difficulty": 0.1,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 7.25,
+        "avg_gates_missed": 0.75,
+        "perfect_run_rate": 0.0,
+        "avg_score": 410.25,
+        "avg_reward": 481.8793191217439,
+        "step": 1097728,
+        "curriculum_difficulty": 0.1
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 1.0,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.3,
+        "avg_gates_missed": 2.7,
+        "perfect_run_rate": 0.0,
+        "avg_score": 211.35,
+        "avg_reward": 280.92485313407695,
+        "step": 1114112,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.5125,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.7,
+        "avg_gates_missed": 2.3,
+        "perfect_run_rate": 0.0,
+        "avg_score": 251.15,
+        "avg_reward": 321.9813764865551,
+        "step": 1130496,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 1.0,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.15,
+        "avg_gates_missed": 1.85,
+        "perfect_run_rate": 0.0,
+        "avg_score": 235.925,
+        "avg_reward": 303.97974127857685,
+        "step": 1146880,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.7,
+        "avg_gates_missed": 2.3,
+        "perfect_run_rate": 0.0,
+        "avg_score": 191.15,
+        "avg_reward": 258.6686126653285,
+        "step": 1163264,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.65,
+        "avg_gates_missed": 2.35,
+        "perfect_run_rate": 0.0,
+        "avg_score": 186.175,
+        "avg_reward": 253.40193096654625,
+        "step": 1179648,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.75,
+        "avg_gates_missed": 4.25,
+        "perfect_run_rate": 0.0,
+        "avg_score": 57.125,
+        "avg_reward": 130.95479634199165,
+        "step": 1196032,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.66875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 6.4,
+        "avg_gates_missed": 1.6,
+        "perfect_run_rate": 0.0,
+        "avg_score": 320.8,
+        "avg_reward": 389.9488964199971,
+        "step": 1212416,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.99375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.1,
+        "avg_gates_missed": 2.9,
+        "perfect_run_rate": 0.0,
+        "avg_score": 191.45,
+        "avg_reward": 264.04518710002924,
+        "step": 1228800,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.8125,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.8,
+        "avg_gates_missed": 3.2,
+        "perfect_run_rate": 0.0,
+        "avg_score": 161.6,
+        "avg_reward": 234.6290877352601,
+        "step": 1245184,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.76875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 6.2,
+        "avg_gates_missed": 1.8,
+        "perfect_run_rate": 0.0,
+        "avg_score": 300.9,
+        "avg_reward": 371.1531190667778,
+        "step": 1261568,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.75,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.5,
+        "avg_gates_missed": 4.5,
+        "perfect_run_rate": 0.0,
+        "avg_score": 32.25,
+        "avg_reward": 103.62599267522296,
+        "step": 1277952,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.25,
+        "avg_gates_missed": 4.75,
+        "perfect_run_rate": 0.0,
+        "avg_score": 7.375,
+        "avg_reward": 80.10037236196226,
+        "step": 1294336,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.9375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 6.05,
+        "avg_gates_missed": 1.95,
+        "perfect_run_rate": 0.0,
+        "avg_score": 285.975,
+        "avg_reward": 357.74192954556565,
+        "step": 1310720,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.775,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.5,
+        "avg_gates_missed": 3.5,
+        "perfect_run_rate": 0.0,
+        "avg_score": 131.75,
+        "avg_reward": 201.6653829369245,
+        "step": 1327104,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.7,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.25,
+        "avg_gates_missed": 3.75,
+        "perfect_run_rate": 0.0,
+        "avg_score": 106.875,
+        "avg_reward": 176.07020929071396,
+        "step": 1343488,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.15,
+        "finish_rate": 0.05
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 1.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 3.0,
+        "avg_gates_missed": 5.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": -17.5,
+        "avg_reward": 269.1517350457103,
+        "step": 1359872,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.375,
+        "finish_rate": 1.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 1.0,
+        "avg_gates_passed": 2.0,
+        "avg_gates_missed": 3.95,
+        "perfect_run_rate": 0.0,
+        "avg_score": -36.025,
+        "avg_reward": -65.71766650813217,
+        "step": 1376256,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.25,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 1.0,
+        "avg_gates_passed": 3.0,
+        "avg_gates_missed": 3.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 61.5,
+        "avg_reward": 34.24186585604646,
+        "step": 1392640,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.375,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 7.05,
+        "avg_gates_missed": 0.95,
+        "perfect_run_rate": 0.0,
+        "avg_score": 385.475,
+        "avg_reward": 458.37931084836475,
+        "step": 1409024,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.7,
+        "avg_gates_missed": 2.3,
+        "perfect_run_rate": 0.0,
+        "avg_score": 191.15,
+        "avg_reward": 257.64149455839174,
+        "step": 1425408,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.76875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.35,
+        "avg_gates_missed": 3.65,
+        "perfect_run_rate": 0.0,
+        "avg_score": 116.825,
+        "avg_reward": 184.24250762696622,
+        "step": 1441792,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.76875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 4.65,
+        "avg_gates_missed": 3.35,
+        "perfect_run_rate": 0.0,
+        "avg_score": 146.675,
+        "avg_reward": 214.0000376586833,
+        "step": 1458176,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.8,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.0,
+        "avg_gates_missed": 2.0,
+        "perfect_run_rate": 0.0,
+        "avg_score": 221.0,
+        "avg_reward": 286.68603166171613,
+        "step": 1474560,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    },
+    {
+      "current": {
+        "difficulty": 0.15000000000000002,
+        "finish_rate": 0.0,
+        "fall_rate": 0.0,
+        "avg_gates_passed": 5.55,
+        "avg_gates_missed": 1.45,
+        "perfect_run_rate": 0.0,
+        "avg_score": 275.725,
+        "avg_reward": 341.84068382432577,
+        "step": 1490944,
+        "curriculum_difficulty": 0.15000000000000002
+      },
+      "baseline_regression": {
+        "difficulty": 0.0,
+        "gate_rate": 0.875,
+        "finish_rate": 0.0
+      },
+      "training_difficulty": 0.15000000000000002
+    }
+  ]
+}

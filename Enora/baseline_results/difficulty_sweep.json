@@ -1,5 +1,5 @@
 {
-  "checkpoint": "checkpoints/seed_0/policy_501760.pt",
+  "checkpoint": "checkpoints/curriculum_mixed_warm_seed_0/policy_final.pt",
   "n_episodes": 30,
   "results": [
     {
@@ -10,47 +10,47 @@
       "avg_gates_missed": 0.0,
       "perfect_run_rate": 1.0,
       "avg_score": 480.0,
-      "avg_reward": 943.6137965112933
+      "avg_reward": 943.5148789467131
     },
     {
       "difficulty": 0.1,
       "finish_rate": 1.0,
       "fall_rate": 0.0,
-      "avg_gates_passed": 8.0,
-      "avg_gates_missed": 0.0,
-      "perfect_run_rate": 1.0,
-      "avg_score": 480.0,
-      "avg_reward": 943.3203312835955
+      "avg_gates_passed": 7.9,
+      "avg_gates_missed": 0.1,
+      "perfect_run_rate": 0.9,
+      "avg_score": 470.7,
+      "avg_reward": 933.9283766644973
     },
     {
       "difficulty": 0.2,
       "finish_rate": 1.0,
       "fall_rate": 0.0,
-      "avg_gates_passed": 8.0,
-      "avg_gates_missed": 0.0,
-      "perfect_run_rate": 1.0,
-      "avg_score": 480.0,
-      "avg_reward": 942.9413639762803
+      "avg_gates_passed": 6.7,
+      "avg_gates_missed": 1.3,
+      "perfect_run_rate": 0.06666666666666667,
+      "avg_score": 342.2,
+      "avg_reward": 805.0511021588787
     },
     {
       "difficulty": 0.30000000000000004,
       "finish_rate": 1.0,
       "fall_rate": 0.0,
-      "avg_gates_passed": 4.833333333333333,
-      "avg_gates_missed": 3.1666666666666665,
+      "avg_gates_passed": 4.433333333333334,
+      "avg_gates_missed": 3.566666666666667,
       "perfect_run_rate": 0.0,
-      "avg_score": 103.16666666666666,
-      "avg_reward": 565.5902431721635
+      "avg_score": 55.566666666666634,
+      "avg_reward": 517.9278824618266
     },
     {
       "difficulty": 0.4,
       "finish_rate": 1.0,
       "fall_rate": 0.0,
-      "avg_gates_passed": 0.0,
-      "avg_gates_missed": 8.0,
+      "avg_gates_passed": 0.6,
+      "avg_gates_missed": 7.4,
       "perfect_run_rate": 0.0,
-      "avg_score": -576.0,
-      "avg_reward": -114.18251078551855
+      "avg_score": -496.8,
+      "avg_reward": -35.059386137517286
     },
     {
       "difficulty": 0.5,
@@ -60,7 +60,7 @@
       "avg_gates_missed": 8.0,
       "perfect_run_rate": 0.0,
       "avg_score": -680.0,
-      "avg_reward": -218.91020042170376
+      "avg_reward": -218.99785539264911
     },
     {
       "difficulty": 0.6000000000000001,
@@ -70,7 +70,7 @@
       "avg_gates_missed": 8.0,
       "perfect_run_rate": 0.0,
       "avg_score": -784.0000000000001,
-      "avg_reward": -323.77909743948175
+      "avg_reward": -323.8177848770752
     },
     {
       "difficulty": 0.7000000000000001,
@@ -80,37 +80,37 @@
       "avg_gates_missed": 8.0,
       "perfect_run_rate": 0.0,
       "avg_score": -888.0000000000001,
-      "avg_reward": -428.71343598943923
+      "avg_reward": -428.8269337108385
     },
     {
       "difficulty": 0.8,
-      "finish_rate": 1.0,
-      "fall_rate": 0.0,
+      "finish_rate": 0.6666666666666666,
+      "fall_rate": 0.3333333333333333,
       "avg_gates_passed": 0.0,
-      "avg_gates_missed": 8.0,
+      "avg_gates_missed": 7.333333333333333,
       "perfect_run_rate": 0.0,
-      "avg_score": -992.0,
-      "avg_reward": -533.7263870210492
+      "avg_score": -909.3333333333334,
+      "avg_reward": -609.1141528585472
     },
     {
       "difficulty": 0.9,
-      "finish_rate": 1.0,
-      "fall_rate": 0.0,
+      "finish_rate": 0.06666666666666667,
+      "fall_rate": 0.9333333333333333,
       "avg_gates_passed": 0.0,
-      "avg_gates_missed": 8.0,
+      "avg_gates_missed": 6.133333333333334,
       "perfect_run_rate": 0.0,
-      "avg_score": -1096.0,
-      "avg_reward": -638.8565317837921
+      "avg_score": -840.2666666666667,
+      "avg_reward": -825.5109766343877
     },
     {
       "difficulty": 1.0,
-      "finish_rate": 1.0,
-      "fall_rate": 0.0,
+      "finish_rate": 0.03333333333333333,
+      "fall_rate": 0.9666666666666667,
       "avg_gates_passed": 0.0,
-      "avg_gates_missed": 8.0,
+      "avg_gates_missed": 5.933333333333334,
       "perfect_run_rate": 0.0,
-      "avg_score": -1200.0,
-      "avg_reward": -744.2635254428502
+      "avg_score": -890.0,
+      "avg_reward": -894.3409711593563
     }
   ]
 }

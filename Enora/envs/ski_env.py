@@ -1,18 +1,23 @@
 """
-ski_env.py — Competition slalom skiing environment with curriculum learning.
+ski_env.py — Competition slalom skiing environment (v2).
+
+Redesigned dynamics with heading-based turning and 2D action space.
+
+Physics model:
+  - Skier moves on a slope with gravity pulling downhill (+y direction)
+  - Heading angle controls direction of travel relative to the fall line
+  - Steering action rotates heading; sharper turns at high speed cost more grip
+  - Brake action applies edge pressure, increasing drag to trade speed for control
+  - Crash if: speed too high during sharp turn (loss of edge grip), or out of bounds
+
+State (5 internal): [x, y, vx, vy, heading]
+Observation (14D): see _get_obs
+Action (2D): [steer, brake] both in [-1, 1], brake clamped to [0, 1]
 
 Curriculum stages (controlled by `difficulty` in [0.0, 1.0]):
   - Gates spread from narrow (easy) to wide alternating (hard)
   - Gate width shrinks as difficulty rises
   - Miss penalty grows with difficulty
-  - Track width stays constant
-
-State (10D):
-    [x, y, vx, vy, angle, angular_vel,
-     next_gate_rel_x, next_gate_rel_y,
-     next2_gate_rel_x, next2_gate_rel_y]
-
-Action (1D): continuous steering torque in [-1, 1]
 """
 
 import numpy as np
@@ -24,49 +29,55 @@ class SkiEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
 
     # --- Physics ---
-    GRAVITY     = 9.81
-    SLOPE_ANGLE = 20.0
-    MASS        = 70.0
-    DRAG        = 0.3
-    MAX_TORQUE  = 50.0
-    DT          = 0.05
-    MAX_STEPS   = 700
+    GRAVITY      = 9.81
+    SLOPE_ANGLE  = 20.0          # degrees, steepness of hill
+    DT           = 0.05
+    MAX_STEPS    = 700
+
+    # Turning
+    MAX_STEER_RATE = 2.5         # rad/s — max heading change rate
+    # Speed
+    BASE_DRAG    = 0.02          # air/snow friction (always present)
+    BRAKE_DRAG   = 0.25          # additional drag when braking fully
+    TURN_DRAG    = 0.10          # additional drag from carving (proportional to |steer|)
+    MAX_SPEED    = 25.0          # absolute speed cap (terminal velocity)
+
+    # Crash conditions
+    CRASH_LATERAL_G = 8.0        # max centripetal acceleration before wipeout (m/s^2)
 
     # --- Track ---
-    SLOPE_LENGTH = 100.0
-    TRACK_WIDTH  = 8.0
-    FALL_ANGLE   = 35.0
+    SLOPE_LENGTH = 120.0         # longer slope for more gate spacing
+    TRACK_WIDTH  = 10.0          # wider track for larger gate offsets
+    N_GATES_DEFAULT = 8
 
-    # --- Scoring (fixed reference values) ---
+    # --- Scoring ---
     GATE_PASS_REWARD  =  60.0
     FINISH_BONUS      = 200.0
     SPEED_BONUS_RATE  =   0.3
     FALL_PENALTY      =  80.0
 
-    def __init__(self, render_mode=None, n_gates=8, difficulty=0.0):
-        """
-        difficulty: float in [0.0, 1.0]
-          0.0 = easy (gates close to centre, wide gates, small miss penalty)
-          1.0 = hard (full alternating offset, narrow gates, large penalty)
-        """
+    def __init__(self, render_mode=None, n_gates=N_GATES_DEFAULT, difficulty=0.0):
         super().__init__()
         self.render_mode = render_mode
         self.n_gates     = n_gates
         self.difficulty  = float(np.clip(difficulty, 0.0, 1.0))
 
         self.observation_space = spaces.Box(
-            low=np.full(10, -5.0, dtype=np.float32),
-            high=np.full(10,  5.0, dtype=np.float32),
+            low=np.full(14, -5.0, dtype=np.float32),
+            high=np.full(14,  5.0, dtype=np.float32),
             dtype=np.float32,
         )
+        # Action: [steer, brake]
         self.action_space = spaces.Box(
-            low=np.array([-1.0], dtype=np.float32),
-            high=np.array([ 1.0], dtype=np.float32),
+            low=np.array([-1.0, -1.0], dtype=np.float32),
+            high=np.array([ 1.0,  1.0], dtype=np.float32),
             dtype=np.float32,
         )
 
-        self._slope_rad = np.radians(self.SLOPE_ANGLE)
-        self.state        = None
+        self._slope_rad   = np.radians(self.SLOPE_ANGLE)
+        self._gravity_acc = self.GRAVITY * np.sin(self._slope_rad)
+
+        self.state        = None    # [x, y, vx, vy, heading]
         self.gates        = []
         self.gates_passed = []
         self.gates_missed = []
@@ -78,23 +89,23 @@ class SkiEnv(gym.Env):
 
     @property
     def gate_offset(self):
-        """Lateral offset of alternating gates. 0.5 (easy) → 5.5 (hard)."""
-        return 0.5 + self.difficulty * 5.0
+        """Lateral offset of alternating gates. 0.5 (easy) -> 6.0 (hard)."""
+        return 0.5 + self.difficulty * 5.5
 
     @property
     def gate_width(self):
-        """Gate half-width. 2.5 (easy) → 1.2 (hard)."""
+        """Gate half-width. 2.5 (easy) -> 1.2 (hard)."""
         return 2.5 - self.difficulty * 1.3
 
     @property
     def gate_miss_penalty(self):
-        """Miss penalty. 20 (easy) → 150 (hard)."""
+        """Miss penalty. 20 (easy) -> 150 (hard)."""
         return 20.0 + self.difficulty * 130.0
 
     @property
     def gate_y_tolerance(self):
-        """Y-window to detect gate crossing. Wider when easy."""
-        return 2.0 - self.difficulty * 0.8   # 2.0 → 1.2
+        """Y-window to detect gate crossing."""
+        return 2.0 - self.difficulty * 0.8   # 2.0 -> 1.2
 
     # ------------------------------------------------------------------
     # Gym interface
@@ -105,7 +116,9 @@ class SkiEnv(gym.Env):
 
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
-        self.state        = np.zeros(6, dtype=np.float64)
+        # State: [x, y, vx, vy, heading]
+        # Start at top, slight downhill velocity, heading straight down
+        self.state = np.array([0.0, 0.0, 0.0, 2.0, 0.0], dtype=np.float64)
         self.step_count   = 0
         self.gates        = self._generate_gates()
         self.gates_passed = [False] * self.n_gates
@@ -114,36 +127,90 @@ class SkiEnv(gym.Env):
 
     def step(self, action):
         action = np.clip(action, -1.0, 1.0)
-        torque = float(action[0]) * self.MAX_TORQUE
+        steer = float(action[0])                     # [-1, 1]
+        brake = float(np.clip(action[1], 0.0, 1.0))  # [0, 1]
 
-        x, y, vx, vy, theta, omega = self.state
+        x, y, vx, vy, heading = self.state
+        speed = np.sqrt(vx**2 + vy**2)
 
-        ax    = -self.DRAG * vx / self.MASS + torque / self.MASS * 0.1
-        ay    = self.GRAVITY * np.sin(self._slope_rad) - self.DRAG * vy / self.MASS
-        alpha = (torque - 0.5 * self.MASS * self.GRAVITY * np.sin(theta)) / (0.3 * self.MASS)
-        alpha += self.np_random.normal(0, 0.3)
+        # --- Heading update ---
+        # Steering rate scales with action; slight reduction at very high speed
+        # (harder to turn when going fast, like real skiing)
+        speed_factor = 1.0 / (1.0 + 0.03 * speed)
+        d_heading = steer * self.MAX_STEER_RATE * speed_factor * self.DT
+        heading = heading + d_heading
 
-        vx    += ax    * self.DT
-        vy    += ay    * self.DT
-        x     += vx    * self.DT
-        y     += vy    * self.DT
-        omega += alpha * self.DT
-        theta += omega * self.DT
+        # --- Acceleration ---
+        # Gravity component along the slope (always pushes +y = downhill)
+        grav_ax = 0.0
+        grav_ay = self._gravity_acc
 
-        self.state      = np.array([x, y, vx, vy, theta, omega])
+        # Total drag = base + brake contribution + turn contribution
+        drag_coeff = (self.BASE_DRAG
+                      + brake * self.BRAKE_DRAG
+                      + abs(steer) * self.TURN_DRAG)
+
+        # Drag opposes current velocity
+        if speed > 0.01:
+            drag_ax = -drag_coeff * vx * speed
+            drag_ay = -drag_coeff * vy * speed
+        else:
+            drag_ax = 0.0
+            drag_ay = 0.0
+
+        # Heading steers the velocity: apply a lateral force that rotates
+        # velocity toward the heading direction.
+        # Target velocity direction from heading (heading=0 means straight down)
+        target_dx = np.sin(heading)
+        target_dy = np.cos(heading)
+
+        # Carving force: redirects velocity toward heading direction
+        # Strength proportional to speed (no speed = no carving)
+        carve_strength = 5.0 * speed
+        carve_ax = carve_strength * (target_dx - (vx / max(speed, 0.1))) * self.DT
+        carve_ay = carve_strength * (target_dy - (vy / max(speed, 0.1))) * self.DT
+
+        # Integrate
+        ax = grav_ax + drag_ax + carve_ax
+        ay = grav_ay + drag_ay + carve_ay
+        vx += ax * self.DT
+        vy += ay * self.DT
+
+        # Speed cap
+        speed_new = np.sqrt(vx**2 + vy**2)
+        if speed_new > self.MAX_SPEED:
+            scale = self.MAX_SPEED / speed_new
+            vx *= scale
+            vy *= scale
+            speed_new = self.MAX_SPEED
+
+        # Add small noise for realism
+        vx += self.np_random.normal(0, 0.05) * self.DT
+        vy += self.np_random.normal(0, 0.05) * self.DT
+
+        # Position update
+        x += vx * self.DT
+        y += vy * self.DT
+
+        self.state = np.array([x, y, vx, vy, heading])
         self.step_count += 1
 
-        fell    = abs(np.degrees(theta)) > self.FALL_ANGLE
+        # --- Crash detection ---
+        # Centripetal acceleration: v^2 * d_heading / dt
+        centripetal = speed * abs(d_heading) / self.DT if self.DT > 0 else 0
+        crashed = centripetal > self.CRASH_LATERAL_G
         out_OOB = abs(x) > self.TRACK_WIDTH
         reached = y >= self.SLOPE_LENGTH
         timeout = self.step_count >= self.MAX_STEPS
 
-        terminated = fell or out_OOB or reached
+        terminated = crashed or out_OOB or reached
         truncated  = timeout and not terminated
 
+        # --- Reward ---
         gate_reward = self._check_gates(x, y)
         reward = self._compute_reward(
-            x, y, vx, vy, theta, fell, out_OOB, reached, gate_reward
+            x, y, vx, vy, heading, speed_new,
+            crashed, out_OOB, reached, gate_reward, brake
         )
 
         n_passed = sum(self.gates_passed)
@@ -154,9 +221,10 @@ class SkiEnv(gym.Env):
             "n_gates":       self.n_gates,
             "perfect_run":   reached and n_missed == 0,
             "reached":       reached,
-            "fell":          fell or out_OOB,
+            "fell":          crashed or out_OOB,
             "steps":         self.step_count,
             "difficulty":    self.difficulty,
+            "speed":         speed_new,
             "score":         n_passed * self.GATE_PASS_REWARD
                              - n_missed * self.gate_miss_penalty,
         }
@@ -167,22 +235,23 @@ class SkiEnv(gym.Env):
         return self._get_obs(), reward, terminated, truncated, info
 
     # ------------------------------------------------------------------
-    # Reward — shaped for learning
+    # Reward
     # ------------------------------------------------------------------
 
-    def _compute_reward(self, x, y, vx, vy, theta, fell, out_OOB, reached, gate_reward):
+    def _compute_reward(self, x, y, vx, vy, heading, speed,
+                        crashed, out_OOB, reached, gate_reward, brake):
         reward = 0.0
 
-        # 1. Forward progress (dense)
-        reward += vy * self.DT * 1.0
+        # 1. Forward progress (dense) — reward downhill speed
+        reward += vy * self.DT * 0.8
 
-        # 2. Alignment toward next gate (dense, scales with difficulty)
+        # 2. Alignment toward next gate (dense)
         gx = self._next_gate_x(y)
-        alignment_weight = 0.05 + 0.15 * self.difficulty   # stronger pull when hard
+        alignment_weight = 0.05 + 0.15 * self.difficulty
         reward -= alignment_weight * abs(x - gx) * self.DT
 
-        # 3. Stay upright
-        reward += 0.05 * (np.cos(theta) - 1.0)
+        # 3. Small brake penalty — discourage constant braking
+        reward -= 0.02 * brake
 
         # 4. Gate outcome (dominant sparse signal)
         reward += gate_reward
@@ -191,7 +260,7 @@ class SkiEnv(gym.Env):
         if reached:
             steps_remaining = self.MAX_STEPS - self.step_count
             reward += self.FINISH_BONUS + steps_remaining * self.SPEED_BONUS_RATE
-        if fell or out_OOB:
+        if crashed or out_OOB:
             reward -= self.FALL_PENALTY
 
         return float(reward)
@@ -201,13 +270,14 @@ class SkiEnv(gym.Env):
     # ------------------------------------------------------------------
 
     def _generate_gates(self):
-        ys = np.linspace(10, 90, self.n_gates)
+        # Wider spacing: gates from y=12 to y=108 on a 120m slope
+        ys = np.linspace(12, self.SLOPE_LENGTH - 12, self.n_gates)
         offset = self.gate_offset
         xs = np.array([
             offset * (1 if i % 2 == 0 else -1)
             for i in range(self.n_gates)
         ], dtype=float)
-        noise_scale = 0.3 + self.difficulty * 0.5   # more noise when hard
+        noise_scale = 0.3 + self.difficulty * 0.5
         xs += self.np_random.uniform(-noise_scale, noise_scale, self.n_gates)
         return list(zip(ys.tolist(), xs.tolist()))
 
@@ -224,7 +294,6 @@ class SkiEnv(gym.Env):
                 else:
                     self.gates_missed[i] = True
                     reward -= self.gate_miss_penalty
-                    self.state[2] *= 0.4   # stumble effect
         return reward
 
     def _next_gate_x(self, y):
@@ -234,23 +303,44 @@ class SkiEnv(gym.Env):
         return 0.0
 
     # ------------------------------------------------------------------
-    # Observation (10D)
+    # Observation (14D)
     # ------------------------------------------------------------------
 
     def _get_obs(self):
-        x, y, vx, vy, theta, omega = self.state
+        x, y, vx, vy, heading = self.state
+        speed = np.sqrt(vx**2 + vy**2)
 
         base = np.array([
-            x     / self.TRACK_WIDTH,
-            y     / self.SLOPE_LENGTH,
-            vx    / 10.0,
-            vy    / 20.0,
-            theta / np.radians(self.FALL_ANGLE),
-            omega / 5.0,
+            x       / self.TRACK_WIDTH,
+            y       / self.SLOPE_LENGTH,
+            vx      / 10.0,
+            vy      / 20.0,
+            heading / np.pi,               # normalise heading to [-1, 1]
+            speed   / self.MAX_SPEED,      # normalised speed
         ], dtype=np.float32)
 
+        # 2-gate lookahead (4 values)
         upcoming = self._get_upcoming_gates(y, n=2)
-        return np.clip(np.concatenate([base, upcoming]), -5.0, 5.0)
+
+        # Gate width normalised
+        gate_width_norm = self.gate_width / 2.5
+
+        # Lateral error: is vx moving toward or away from next gate?
+        next_gx = self._next_gate_x(y)
+        lateral_offset = next_gx - x
+        lateral_error = np.sign(lateral_offset) * vx / 10.0
+
+        # Course progress
+        gates_passed_ratio = sum(self.gates_passed) / self.n_gates
+
+        context = np.array([
+            gate_width_norm,
+            lateral_error,
+            gates_passed_ratio,
+            self.difficulty,
+        ], dtype=np.float32)
+
+        return np.clip(np.concatenate([base, upcoming, context]), -5.0, 5.0)
 
     def _get_upcoming_gates(self, y, n=2):
         result = []
@@ -281,31 +371,34 @@ class SkiEnv(gym.Env):
 
         W, H = 600, 520
         TRACK_TOP = 60
-        TRACK_H   = 400          # vertical pixels for the slope
+        TRACK_H   = 400
         if self.screen is None:
             pygame.init()
             if self.render_mode == "human":
                 self.screen = pygame.display.set_mode((W, H))
-                pygame.display.set_caption("Ski RL — Competition Slalom")
+                pygame.display.set_caption("Ski RL — Competition Slalom v2")
             else:
                 self.screen = pygame.Surface((W, H))
             self.clock = pygame.time.Clock()
 
-        # Background — sky + slope
+        # Background
         self.screen.fill((170, 205, 235))
         pygame.draw.rect(self.screen, (230, 243, 255), (0, TRACK_TOP, W, H))
 
-        # Draw track boundary lines
-        left_x  = int(W / 2 - self.TRACK_WIDTH / self.TRACK_WIDTH * W * 0.45)
-        right_x = int(W / 2 + self.TRACK_WIDTH / self.TRACK_WIDTH * W * 0.45)
-        pygame.draw.line(self.screen, (150, 180, 220), (left_x,  TRACK_TOP), (left_x,  TRACK_TOP + TRACK_H), 2)
-        pygame.draw.line(self.screen, (150, 180, 220), (right_x, TRACK_TOP), (right_x, TRACK_TOP + TRACK_H), 2)
+        # Track boundaries
+        left_x  = int(W / 2 - W * 0.45)
+        right_x = int(W / 2 + W * 0.45)
+        pygame.draw.line(self.screen, (150, 180, 220),
+                         (left_x, TRACK_TOP), (left_x, TRACK_TOP + TRACK_H), 2)
+        pygame.draw.line(self.screen, (150, 180, 220),
+                         (right_x, TRACK_TOP), (right_x, TRACK_TOP + TRACK_H), 2)
 
-        # Draw finish line (red line)
+        # Finish line
         finish_y = TRACK_TOP + TRACK_H
-        pygame.draw.line(self.screen, (220, 30, 30), (left_x, finish_y), (right_x, finish_y), 4)
+        pygame.draw.line(self.screen, (220, 30, 30),
+                         (left_x, finish_y), (right_x, finish_y), 4)
 
-        # Draw gates
+        # Gates
         for i, (gy, gx) in enumerate(self.gates):
             sx = int(W / 2 + (gx / self.TRACK_WIDTH) * W * 0.45)
             sy = int(TRACK_TOP + (gy / self.SLOPE_LENGTH) * TRACK_H)
@@ -326,40 +419,47 @@ class SkiEnv(gym.Env):
             lbl = font_sm.render(str(i + 1), True, col)
             self.screen.blit(lbl, (sx + hw + 4, sy - 8))
 
-        # Draw skier
-        x, y, *_, theta, _ = self.state
+        # Skier
+        x, y, vx, vy, heading = self.state
+        speed = np.sqrt(vx**2 + vy**2)
         sx = int(W / 2 + (x / self.TRACK_WIDTH) * W * 0.45)
         sy = int(TRACK_TOP + (y / self.SLOPE_LENGTH) * TRACK_H)
-        L  = 20
-        dx, dy = int(L * np.sin(theta)), int(L * np.cos(theta))
-        pygame.draw.line(self.screen, (20, 60, 180), (sx, sy + dy), (sx, sy - dy), 4)
-        pygame.draw.circle(self.screen, (255, 200, 140), (sx, sy - dy - 7), 7)
 
-        # Skis
-        ski_len = 14
-        ski_angle = theta + 0.1
+        # Body oriented along heading
+        L = 18
+        dx_h = int(L * np.sin(heading))
+        dy_h = int(L * np.cos(heading))
+        pygame.draw.line(self.screen, (20, 60, 180),
+                         (sx - dx_h, sy - dy_h), (sx + dx_h, sy + dy_h), 4)
+        pygame.draw.circle(self.screen, (255, 200, 140),
+                           (sx - dx_h, sy - dy_h), 7)
+
+        # Skis — aligned with heading
+        ski_len = 12
         for side in [-1, 1]:
-            sx2 = sx + side * int(5 * np.cos(theta))
-            sy2 = sy + side * int(5 * np.sin(theta))
+            ox = side * int(4 * np.cos(heading))
+            oy = side * int(4 * np.sin(heading))
             pygame.draw.line(
                 self.screen, (30, 30, 80),
-                (sx2 - int(ski_len * np.sin(ski_angle)), sy2 - int(ski_len * np.cos(ski_angle))),
-                (sx2 + int(ski_len * np.sin(ski_angle)), sy2 + int(ski_len * np.cos(ski_angle))),
+                (sx + ox - int(ski_len * np.sin(heading)),
+                 sy + oy - int(ski_len * np.cos(heading))),
+                (sx + ox + int(ski_len * np.sin(heading)),
+                 sy + oy + int(ski_len * np.cos(heading))),
                 3
             )
 
         # HUD
-        font     = pygame.font.SysFont(None, 21)
+        font = pygame.font.SysFont(None, 21)
         n_passed = sum(self.gates_passed)
         n_missed = sum(self.gates_missed)
-        score    = n_passed * self.GATE_PASS_REWARD - n_missed * self.gate_miss_penalty
+        score = n_passed * self.GATE_PASS_REWARD - n_missed * self.gate_miss_penalty
         hud1 = font.render(
-            f"y={y:.1f}m  vy={self.state[3]:.1f}m/s  tilt={np.degrees(theta):.1f}°",
+            f"y={y:.1f}m  speed={speed:.1f}m/s  heading={np.degrees(heading):.1f}°",
             True, (10, 10, 10)
         )
         hud2 = font.render(
             f"passed={n_passed}  missed={n_missed}  score={score:.0f}  "
-            f"difficulty={self.difficulty:.2f}",
+            f"diff={self.difficulty:.2f}",
             True, (10, 10, 10)
         )
         self.screen.blit(hud1, (8, 8))

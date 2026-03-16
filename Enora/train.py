@@ -355,6 +355,21 @@ CURRICULUM_STRATEGIES = {
         sampling          = "range",
         sampling_spread   = 0.15,   # sample from [d - 0.15, d + 0.15]
     ),
+    # Focused: tighter sampling window, smaller steps, stricter promotion.
+    # Spends more time per difficulty level with less signal blur.
+    # Designed for the 0.2–0.4 transition zone where gate performance collapses.
+    "focused": dict(
+        total_steps       = 1_500_000,   # more budget to spend longer per level
+        start_difficulty  = 0.0,
+        max_difficulty    = 1.0,
+        difficulty_step   = 0.05,        # half the mixed jump
+        promote_threshold = 0.70,        # stricter than mixed
+        promote_window    = 3,           # must prove consistency
+        eval_interval     = 15_000,
+        regress_threshold = 0.5,
+        sampling          = "range",
+        sampling_spread   = 0.08,        # tight window: ±0.08 around target
+    ),
 }
 
 
@@ -918,7 +933,7 @@ if __name__ == "__main__":
     parser.add_argument("--curriculum",  action="store_true",
                         help="Train with progressive difficulty (curriculum learning)")
     parser.add_argument("--curriculum-strategy", default="mixed",
-                        choices=["conservative", "aggressive", "mixed"],
+                        choices=["conservative", "aggressive", "mixed", "focused"],
                         help="Curriculum strategy preset (default: mixed)")
     parser.add_argument("--difficulty-sweep", action="store_true",
                         help="Sweep difficulty 0.0→1.0 and plot degradation curve")
