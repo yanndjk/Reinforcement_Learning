@@ -215,7 +215,7 @@ Speed is hard-capped at 25 m/s. The agent must learn to manage speed: brake befo
 
 - Slope length: 120m (up from 100m, giving more room between gates)
 - Track width: 10m (up from 8m, accommodating wider gate offsets at high difficulty)
-- 8 gates spaced evenly from y=12 to y=108
+- 4 gates spaced evenly from y=12 to y=108
 
 ### Observation space (14D)
 

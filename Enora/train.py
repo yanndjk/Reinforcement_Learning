@@ -35,15 +35,15 @@ from agents.ppo_agent import ActorCritic, RolloutBuffer, ppo_update
 
 CFG = dict(
     # Training
-    total_steps    = 500_000,
-    rollout_steps  = 2048,      # steps collected before each update
+    total_steps    = 1_200_000,
+    rollout_steps  = 2048,      # larger rollouts for more stable updates
     lr             = 3e-4,
-    gamma          = 0.99,
-    lam            = 0.95,
+    gamma          = 0.995,     # longer horizon — finish matters more
+    lam            = 0.97,
     clip_eps       = 0.2,
     vf_coef        = 0.5,
-    ent_coef       = 0.01,
-    n_epochs       = 4,
+    ent_coef       = 0.010,     # less exploration noise — more exploitation
+    n_epochs       = 4,         # stronger PPO updates per rollout
     # Logging
     log_interval   = 10,        # episodes between console prints
     save_interval  = 50_000,    # steps between checkpoints
@@ -196,7 +196,7 @@ def validate(policy, device, n_episodes: int = 20, render_mode=None,
     results = {
         "reward": [], "reached": [], "fell": [], "timeout": [],
         "gates_passed": [], "gates_missed": [],
-        "perfect_run": [], "score": [],
+        "perfect_run": [], "score": [], "progress": [],
     }
 
     for _ in range(n_episodes):
@@ -222,6 +222,7 @@ def validate(policy, device, n_episodes: int = 20, render_mode=None,
         results["gates_missed"].append(info.get("gates_missed", 0))
         results["perfect_run"].append(float(info.get("perfect_run", False)))
         results["score"].append(info.get("score", 0.0))
+        results["progress"].append(info.get("progress", 0.0))
 
     env.close()
     policy.train()
@@ -235,6 +236,7 @@ def validate(policy, device, n_episodes: int = 20, render_mode=None,
         "avg_gates_missed":  np.mean(results["gates_missed"]),
         "perfect_run_rate":  np.mean(results["perfect_run"]),
         "avg_score":         np.mean(results["score"]),
+        "avg_progress":      np.mean(results["progress"]),
         "avg_reward":        np.mean(results["reward"]),
     }
     return metrics
@@ -245,6 +247,7 @@ def print_validation(metrics, step):
     print(
         f"\n{'='*60}\n"
         f"  VALIDATION @ step {step}  (difficulty={diff:.2f})\n"
+        f"  Avg progress:     {metrics['avg_progress']:>6.1%}\n"
         f"  Finish rate:      {metrics['finish_rate']:>6.1%}\n"
         f"  Fall rate:        {metrics['fall_rate']:>6.1%}\n"
         f"  Timeout rate:     {metrics['timeout_rate']:>6.1%}\n"
@@ -378,6 +381,20 @@ CURRICULUM_STRATEGIES = {
         sampling          = "range",
         sampling_spread   = 0.08,        # tight window: ±0.08 around target
     ),
+    #same as focused but starts at 0.2 to skip the very easy levels and get to the gate learning sooner
+    "fine_tune": dict(
+        total_steps       = 1_500_000,
+        start_difficulty  = 0.2,
+        max_difficulty    = 1.0,
+        difficulty_step   = 0.05,
+        promote_threshold = 0.70,
+        promote_finish    = 0.80,
+        promote_window    = 3,
+        eval_interval     = 15_000,
+        regress_threshold = 0.5,
+        sampling          = "range",
+        sampling_spread   = 0.08,
+    )
 }
 
 
@@ -537,9 +554,11 @@ def train_curriculum(seed: int = 0, checkpoint: str | None = None,
                 f"\n  CURRICULUM CHECK @ step {global_step}  "
                 f"(target diff={difficulty:.2f})\n"
                 f"    Current diff:  gates={m_curr['avg_gates_passed']:.1f}/{env.n_gates}  "
-                f"({gate_rate:.0%})  finish={finish_rate:.0%}\n"
+                f"({gate_rate:.0%})  finish={finish_rate:.0%}  "
+                f"progress={m_curr['avg_progress']:.0%}\n"
                 f"    Regression d=0: gates={m_base['avg_gates_passed']:.1f}/{env.n_gates}  "
-                f"({base_gate_rate:.0%})  finish={m_base['finish_rate']:.0%}"
+                f"({base_gate_rate:.0%})  finish={m_base['finish_rate']:.0%}  "
+                f"progress={m_base['avg_progress']:.0%}"
             )
 
             # Promotion logic — both gate rate AND finish rate must meet threshold
@@ -974,7 +993,7 @@ if __name__ == "__main__":
     parser.add_argument("--curriculum",  action="store_true",
                         help="Train with progressive difficulty (curriculum learning)")
     parser.add_argument("--curriculum-strategy", default="mixed",
-                        choices=["conservative", "aggressive", "mixed", "focused"],
+                        choices=["conservative", "aggressive", "mixed", "focused", "fine_tune"],
                         help="Curriculum strategy preset (default: mixed)")
     parser.add_argument("--difficulty-sweep", action="store_true",
                         help="Sweep difficulty 0.0→1.0 and plot degradation curve")

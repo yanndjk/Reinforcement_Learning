@@ -11,7 +11,7 @@ Physics model:
   - Crash if: speed too high during sharp turn (loss of edge grip), or out of bounds
 
 State (5 internal): [x, y, vx, vy, heading]
-Observation (14D): see _get_obs
+Observation (15D): see _get_obs
 Action (2D): [steer, brake] both in [-1, 1], brake clamped to [0, 1]
 
 Curriculum stages (controlled by `difficulty` in [0.0, 1.0]):
@@ -32,7 +32,8 @@ class SkiEnv(gym.Env):
     GRAVITY      = 9.81
     SLOPE_ANGLE  = 20.0          # degrees, steepness of hill
     DT           = 0.05
-    MAX_STEPS    = 700
+    MAX_STEPS_EASY = 1600    # generous at low difficulty — learn to finish first
+    MAX_STEPS_HARD = 700     # tightens as difficulty rises
 
     # Turning
     MAX_STEER_RATE = 2.5         # rad/s — max heading change rate
@@ -40,21 +41,23 @@ class SkiEnv(gym.Env):
     BASE_DRAG    = 0.02          # air/snow friction (always present)
     BRAKE_DRAG   = 0.25          # additional drag when braking fully
     TURN_DRAG    = 0.10          # additional drag from carving (proportional to |steer|)
+    EDGE_DRAG    = 1.0        # edge braking when perpendicular to fall line
     MAX_SPEED    = 25.0          # absolute speed cap (terminal velocity)
 
     # Crash conditions
-    CRASH_LATERAL_G = 8.0        # max centripetal acceleration before wipeout (m/s^2)
+    CRASH_LATERAL_G = 12.0       # max centripetal acceleration before wipeout (m/s^2)
 
     # --- Track ---
-    SLOPE_LENGTH = 120.0         # longer slope for more gate spacing
+    SLOPE_LENGTH = 160.0         # longer slope — more room before first and after last gate
     TRACK_WIDTH  = 10.0          # wider track for larger gate offsets
     N_GATES_DEFAULT = 4
 
     # --- Scoring (survival-first, gates secondary) ---
-    GATE_PASS_REWARD  =  15.0    # reduced — don't tempt risky maneuvers
-    FINISH_BONUS      = 500.0    # dominant goal: get down the slope alive
-    SPEED_BONUS_RATE  =   0.1    # small bonus for finishing fast
-    FALL_PENALTY      = 300.0    # crashing is catastrophic
+    GATE_PASS_REWARD  =  20.0    # secondary to finish, but meaningful
+    FINISH_BONUS      = 400.0    # dominant goal: get down the slope alive
+    SPEED_BONUS_RATE  =   0.2    # reward efficient completion
+    FALL_PENALTY      = 180.0    # clearly bad, but not so dominant it causes paralysis
+    TIMEOUT_PENALTY   = 120.0    # not finishing is also bad
     SAFE_SPEED        =  15.0    # speed above this gets penalised during turns
 
     def __init__(self, render_mode=None, n_gates=N_GATES_DEFAULT, difficulty=0.0):
@@ -64,8 +67,8 @@ class SkiEnv(gym.Env):
         self.difficulty  = float(np.clip(difficulty, 0.0, 1.0))
 
         self.observation_space = spaces.Box(
-            low=np.full(14, -5.0, dtype=np.float32),
-            high=np.full(14,  5.0, dtype=np.float32),
+            low=np.full(15, -5.0, dtype=np.float32),
+            high=np.full(15,  5.0, dtype=np.float32),
             dtype=np.float32,
         )
         # Action: [steer, brake]
@@ -100,8 +103,8 @@ class SkiEnv(gym.Env):
 
     @property
     def gate_miss_penalty(self):
-        """Miss penalty. 20 (easy) -> 150 (hard)."""
-        return 20.0 + self.difficulty * 130.0
+        """Miss penalty. 20 (easy) -> 60 (hard). Kept moderate to avoid panic-steering."""
+        return 20.0 + self.difficulty * 40.0
 
     @property
     def gate_y_tolerance(self):
@@ -109,6 +112,13 @@ class SkiEnv(gym.Env):
         quality from crossing-timing sensitivity during early training.
         Tighten later once steering is reliable."""
         return 3.0 - self.difficulty * 1.0   # 3.0 -> 2.0
+
+    @property
+    def max_steps(self):
+        """Episode length. 1200 (easy) -> 700 (hard).
+        Generous early on so the agent learns finishing before timing pressure."""
+        t = self.difficulty ** 0.5  # sqrt ramp: time pressure kicks in early
+        return int(self.MAX_STEPS_EASY + t * (self.MAX_STEPS_HARD - self.MAX_STEPS_EASY))
 
     # ------------------------------------------------------------------
     # Gym interface
@@ -131,7 +141,7 @@ class SkiEnv(gym.Env):
     def step(self, action):
         action = np.clip(action, -1.0, 1.0)
         steer = float(action[0])                     # [-1, 1]
-        brake = float(np.clip(action[1], 0.0, 1.0))  # [0, 1]
+        brake = float((action[1] + 1.0) / 2.0)       # map [-1,1] -> [0,1]
 
         x, y, vx, vy, heading = self.state
         speed = np.sqrt(vx**2 + vy**2)
@@ -142,16 +152,23 @@ class SkiEnv(gym.Env):
         speed_factor = 1.0 / (1.0 + 0.03 * speed)
         d_heading = steer * self.MAX_STEER_RATE * speed_factor * self.DT
         heading = heading + d_heading
+        # Wrap to [-π, π] — prevents accumulation and spinning exploits
+        heading = (heading + np.pi) % (2 * np.pi) - np.pi
 
         # --- Acceleration ---
         # Gravity component along the slope (always pushes +y = downhill)
         grav_ax = 0.0
         grav_ay = self._gravity_acc
 
-        # Total drag = base + brake contribution + turn contribution
+        # Edge drag: the more perpendicular to the fall line, the more
+        # the ski edges bite into the snow — this is the real braking mechanism
+        cross_slope = abs(np.sin(heading))   # 0 along fall line, 1 perpendicular
+
+        # Total drag = base + brake + turn + edge
         drag_coeff = (self.BASE_DRAG
                       + brake * self.BRAKE_DRAG
-                      + abs(steer) * self.TURN_DRAG)
+                      + abs(steer) * self.TURN_DRAG
+                      + cross_slope * self.EDGE_DRAG)
 
         # Drag opposes current velocity
         if speed > 0.01:
@@ -164,14 +181,16 @@ class SkiEnv(gym.Env):
         # Heading steers the velocity: apply a lateral force that rotates
         # velocity toward the heading direction.
         # Target velocity direction from heading (heading=0 means straight down)
+        # Use abs(cos) so forward/backward are symmetric — no exploit from
+        # facing uphill; speed depends only on angle to fall line, not sign
         target_dx = np.sin(heading)
-        target_dy = np.cos(heading)
+        target_dy = abs(np.cos(heading))
 
         # Carving force: redirects velocity toward heading direction
         # Strength proportional to speed (no speed = no carving)
         carve_strength = 5.0 * speed
-        carve_ax = carve_strength * (target_dx - (vx / max(speed, 0.1))) * self.DT
-        carve_ay = carve_strength * (target_dy - (vy / max(speed, 0.1))) * self.DT
+        carve_ax = carve_strength * (target_dx - (vx / max(speed, 0.1)))
+        carve_ay = carve_strength * (target_dy - (vy / max(speed, 0.1)))
 
         # Integrate
         ax = grav_ax + drag_ax + carve_ax
@@ -204,7 +223,7 @@ class SkiEnv(gym.Env):
         crashed = centripetal > self.CRASH_LATERAL_G
         out_OOB = abs(x) > self.TRACK_WIDTH
         reached = y >= self.SLOPE_LENGTH
-        timeout = self.step_count >= self.MAX_STEPS
+        timeout = self.step_count >= self.max_steps
 
         terminated = crashed or out_OOB or reached
         truncated  = timeout and not terminated
@@ -213,7 +232,7 @@ class SkiEnv(gym.Env):
         gate_reward = self._check_gates(x, y)
         reward = self._compute_reward(
             x, y, vx, vy, heading, speed_new,
-            crashed, out_OOB, reached, gate_reward,
+            crashed, out_OOB, reached, truncated, gate_reward,
             centripetal, steer
         )
 
@@ -230,6 +249,7 @@ class SkiEnv(gym.Env):
             "steps":         self.step_count,
             "difficulty":    self.difficulty,
             "speed":         speed_new,
+            "progress":      min(y / self.SLOPE_LENGTH, 1.0),
             "score":         n_passed * self.GATE_PASS_REWARD
                              - n_missed * self.gate_miss_penalty,
         }
@@ -244,50 +264,62 @@ class SkiEnv(gym.Env):
     # ------------------------------------------------------------------
 
     def _compute_reward(self, x, y, vx, vy, heading, speed,
-                        crashed, out_OOB, reached, gate_reward,
+                        crashed, out_OOB, reached, truncated, gate_reward,
                         centripetal, steer):
         reward = 0.0
 
         # --- Priority 1: Survival ---
 
-        # 1a. Alive bonus — every step not crashed is good
-        reward += 0.15
+        # 1a. Alive bonus — small per-step reward for not crashing
+        #     +21 total over 700 steps; not enough to make timeout attractive
+        reward += 0.03
 
-        # 1b. Crash danger shaping — penalise approaching the wipeout threshold
-        #     Ramps from 0 at 50% of limit to -0.5 at the limit
+        # 1b. Crash danger shaping — warn when approaching wipeout threshold
+        #     Caps at roughly -3 to -8 total in typical bad states
         danger = centripetal / self.CRASH_LATERAL_G   # 0 → 1+
         if danger > 0.5:
-            reward -= 1.0 * (danger - 0.5)
+            reward -= 0.4 * (danger - 0.5)
 
         # --- Priority 2: Finish the run ---
 
-        # 2a. Forward progress — gentle downhill incentive
-        reward += vy * self.DT * 0.5
+        # 2a. Forward progress — main dense learnable signal
+        reward += vy * self.DT * 0.8
 
         # --- Priority 3: Safe turning & speed management ---
 
-        # 3a. Penalise high speed during sharp turns
-        #     (teaches brake-before-turn coordination)
+        # 3a. Backward-facing penalty — heading away from downhill is never correct
+        #     |heading| > π/2 means facing uphill; scale penalty by how far past 90°
+        abs_heading = abs(heading)
+        if abs_heading > np.pi / 2:
+            reward -= 0.5 * (abs_heading - np.pi / 2) / (np.pi / 2)
+
+        # 3b. Penalise high speed during sharp turns — coordination hint
         if speed > self.SAFE_SPEED and abs(steer) > 0.3:
             excess = (speed - self.SAFE_SPEED) / self.MAX_SPEED
-            reward -= 0.3 * excess * abs(steer)
+            reward -= 0.01 * excess * abs(steer)
 
-        # --- Priority 4: Gates (reduced — survival first) ---
+        # --- Priority 4: Gates (secondary to survival/finish) ---
 
-        # 4a. Alignment toward next gate (very light)
+        # 4a. Alignment toward next gate (light shaping)
         gx = self._next_gate_x(y)
-        alignment_weight = 0.02 + 0.03 * self.difficulty
+        alignment_weight = 0.03 + 0.03 * self.difficulty
         reward -= alignment_weight * abs(x - gx) * self.DT
 
-        # 4b. Gate outcome (sparse, reduced magnitude)
+        # 4b. Gate outcome (sparse)
         reward += gate_reward
 
         # --- Terminal ---
         if reached:
-            steps_remaining = self.MAX_STEPS - self.step_count
+            steps_remaining = self.max_steps - self.step_count
             reward += self.FINISH_BONUS + steps_remaining * self.SPEED_BONUS_RATE
         if crashed or out_OOB:
             reward -= self.FALL_PENALTY
+        if truncated:
+            progress = min(y / self.SLOPE_LENGTH, 1.0)
+            # Near finish (progress ~1): penalty ≈ -100
+            # Halfway (progress ~0.5): penalty ≈ -140
+            # Near start (progress ~0): penalty ≈ -180
+            reward -= self.TIMEOUT_PENALTY + 80.0 * (1.0 - progress)
 
         return float(reward)
 
@@ -296,8 +328,9 @@ class SkiEnv(gym.Env):
     # ------------------------------------------------------------------
 
     def _generate_gates(self):
-        # Wider spacing: gates from y=12 to y=108 on a 120m slope
-        ys = np.linspace(12, self.SLOPE_LENGTH - 12, self.n_gates)
+        # Gates from y=30 to y=130 on a 160m slope
+        # 30m lead-in before first gate, 30m after last gate to finish
+        ys = np.linspace(30, self.SLOPE_LENGTH - 30, self.n_gates)
         offset = self.gate_offset
         xs = np.array([
             offset * (1 if i % 2 == 0 else -1)
@@ -329,7 +362,7 @@ class SkiEnv(gym.Env):
         return 0.0
 
     # ------------------------------------------------------------------
-    # Observation (14D)
+    # Observation (15D)
     # ------------------------------------------------------------------
 
     def _get_obs(self):
@@ -341,7 +374,8 @@ class SkiEnv(gym.Env):
             y       / self.SLOPE_LENGTH,
             vx      / 10.0,
             vy      / 20.0,
-            heading / np.pi,               # normalise heading to [-1, 1]
+            np.sin(heading),               # periodic heading (no discontinuity)
+            np.cos(heading),               # cos=1 when heading straight down
             speed   / self.MAX_SPEED,      # normalised speed
         ], dtype=np.float32)
 
@@ -376,9 +410,11 @@ class SkiEnv(gym.Env):
             if gy > y and not self.gates_passed[i] and not self.gates_missed[i]:
                 result.append(gx       / self.TRACK_WIDTH)
                 result.append((gy - y) / self.SLOPE_LENGTH)
+        # Virtual finish target — when gates run out, point toward the finish line
         while len(result) < n * 2:
-            result.append(0.0)
-        return np.array(result, dtype=np.float32)
+            result.append(0.0 / self.TRACK_WIDTH)             # x=0 (center)
+            result.append((self.SLOPE_LENGTH - y) / self.SLOPE_LENGTH)  # distance to finish
+        return np.array(result[:n * 2], dtype=np.float32)
 
     # ------------------------------------------------------------------
     # Rendering
