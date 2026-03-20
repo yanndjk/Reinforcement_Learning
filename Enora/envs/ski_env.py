@@ -41,7 +41,7 @@ class SkiEnv(gym.Env):
     BASE_DRAG    = 0.02          # air/snow friction (always present)
     BRAKE_DRAG   = 0.25          # additional drag when braking fully
     TURN_DRAG    = 0.10          # additional drag from carving (proportional to |steer|)
-    EDGE_DRAG    = 1.0        # edge braking when perpendicular to fall line
+    EDGE_DRAG    = 0.5        # edge braking when perpendicular to fall line
     MAX_SPEED    = 25.0          # absolute speed cap (terminal velocity)
 
     # Crash conditions
