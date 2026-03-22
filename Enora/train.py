@@ -28,6 +28,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 from envs.ski_env import SkiEnv
 from agents.ppo_agent import ActorCritic, RolloutBuffer, ppo_update
 
+# Track layout — set via --layout CLI flag (default: "wide")
+LAYOUT = None
+
 
 # ------------------------------------------------------------------
 # Config — tweak these freely
@@ -67,7 +70,7 @@ def train(render: bool = False, seed: int = 0):
     _set_seed(seed)
 
     render_mode = "human" if render else None
-    env = SkiEnv(render_mode=render_mode)
+    env = SkiEnv(render_mode=render_mode, layout=LAYOUT)
 
     obs_dim = env.observation_space.shape[0]
     act_dim = env.action_space.shape[0]
@@ -190,7 +193,7 @@ def train(render: bool = False, seed: int = 0):
 def validate(policy, device, n_episodes: int = 20, render_mode=None,
              difficulty: float = 0.0):
     """Run deterministic rollouts and return aggregated task metrics."""
-    env = SkiEnv(render_mode=render_mode, difficulty=difficulty)
+    env = SkiEnv(render_mode=render_mode, difficulty=difficulty, layout=LAYOUT)
     policy.eval()
 
     results = {
@@ -266,7 +269,7 @@ def print_validation(metrics, step):
 
 def evaluate(checkpoint: str, n_episodes: int = 20, render: bool = False,
              difficulties: list[float] | None = None):
-    env_tmp = SkiEnv()
+    env_tmp = SkiEnv(layout=LAYOUT)
     obs_dim = env_tmp.observation_space.shape[0]
     act_dim = env_tmp.action_space.shape[0]
     env_tmp.close()
@@ -424,7 +427,7 @@ def train_curriculum(seed: int = 0, checkpoint: str | None = None,
     rng = np.random.default_rng(seed)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    env = SkiEnv()
+    env = SkiEnv(layout=LAYOUT)
     obs_dim = env.observation_space.shape[0]
     act_dim = env.action_space.shape[0]
 
@@ -535,6 +538,7 @@ def train_curriculum(seed: int = 0, checkpoint: str | None = None,
             difficulty_history.append((global_step, difficulty))
 
             # Validate at current curriculum difficulty
+            save_difficulty = difficulty   # snapshot before promotion
             m_curr = validate(policy, device, n_episodes=20,
                               difficulty=difficulty)
             m_curr["step"] = global_step
@@ -603,8 +607,8 @@ def train_curriculum(seed: int = 0, checkpoint: str | None = None,
                 "training_difficulty": difficulty,
             })
 
-            # Save checkpoint at each eval
-            ckpt = run_dir / f"policy_{global_step}_d{difficulty:.2f}.pt"
+            # Save checkpoint at each eval (use pre-promotion difficulty)
+            ckpt = run_dir / f"policy_{global_step}_d{save_difficulty:.2f}.pt"
             torch.save(policy.state_dict(), ckpt)
 
     env.close()
@@ -804,7 +808,7 @@ def run_robustness(seed: int = 0, n_batches: int = 5, n_episodes: int = 20):
         print(f"No checkpoints found in {run_dir}")
         return
 
-    env_tmp = SkiEnv()
+    env_tmp = SkiEnv(layout=LAYOUT)
     obs_dim = env_tmp.observation_space.shape[0]
     act_dim = env_tmp.action_space.shape[0]
     env_tmp.close()
@@ -858,7 +862,7 @@ def run_robustness(seed: int = 0, n_batches: int = 5, n_episodes: int = 20):
 def run_difficulty_sweep(checkpoint: str, n_episodes: int = 30,
                          steps: int = 11):
     """Evaluate a checkpoint across a range of difficulties."""
-    env_tmp = SkiEnv()
+    env_tmp = SkiEnv(layout=LAYOUT)
     obs_dim = env_tmp.observation_space.shape[0]
     act_dim = env_tmp.action_space.shape[0]
     env_tmp.close()
@@ -1001,7 +1005,13 @@ if __name__ == "__main__":
                         help="Number of difficulty levels in sweep (default: 11)")
     parser.add_argument("--sweep-episodes", type=int, default=30,
                         help="Episodes per difficulty level in sweep (default: 30)")
+    parser.add_argument("--layout", default=None,
+                        choices=list(SkiEnv.LAYOUTS.keys()),
+                        help="Track layout (default: wide)")
     args = parser.parse_args()
+
+    # Set global layout
+    LAYOUT = args.layout
 
     if args.curriculum:
         train_curriculum(seed=args.seed, checkpoint=args.checkpoint,

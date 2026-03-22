@@ -26,14 +26,13 @@ from gymnasium import spaces
 
 
 class SkiEnv(gym.Env):
-    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
+    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 80}
 
     # --- Physics ---
     GRAVITY      = 9.81
-    SLOPE_ANGLE  = 20.0          # degrees, steepness of hill
+    SLOPE_ANGLE  = 80.0          # degrees, steepness of hill
     DT           = 0.05
-    MAX_STEPS_EASY = 1600    # generous at low difficulty — learn to finish first
-    MAX_STEPS_HARD = 700     # tightens as difficulty rises
+    # MAX_STEPS defined per layout (see LAYOUTS dict)
 
     # Turning
     MAX_STEER_RATE = 2.5         # rad/s — max heading change rate
@@ -47,10 +46,27 @@ class SkiEnv(gym.Env):
     # Crash conditions
     CRASH_LATERAL_G = 12.0       # max centripetal acceleration before wipeout (m/s^2)
 
-    # --- Track ---
-    SLOPE_LENGTH = 160.0         # longer slope — more room before first and after last gate
+    # --- Track layouts ---
     TRACK_WIDTH  = 10.0          # wider track for larger gate offsets
     N_GATES_DEFAULT = 4
+
+    LAYOUTS = {
+        "compact": dict(
+            slope_length = 160.0,
+            gate_start   = 30.0,
+            gate_end     = 130.0,   # 100m gate zone, ~33m spacing with 4 gates
+            max_steps_easy = 1600,
+            max_steps_hard = 700,
+        ),
+        "wide": dict(
+            slope_length = 230.0,
+            gate_start   = 50.0,
+            gate_end     = 200.0,   # 150m gate zone, 50m spacing with 4 gates
+            max_steps_easy = 2300,
+            max_steps_hard = 1000,
+        ),
+    }
+    DEFAULT_LAYOUT = "wide"
 
     # --- Scoring (survival-first, gates secondary) ---
     GATE_PASS_REWARD  =  20.0    # secondary to finish, but meaningful
@@ -60,11 +76,21 @@ class SkiEnv(gym.Env):
     TIMEOUT_PENALTY   = 120.0    # not finishing is also bad
     SAFE_SPEED        =  15.0    # speed above this gets penalised during turns
 
-    def __init__(self, render_mode=None, n_gates=N_GATES_DEFAULT, difficulty=0.0):
+    def __init__(self, render_mode=None, n_gates=N_GATES_DEFAULT,
+                 difficulty=0.0, layout=None):
         super().__init__()
         self.render_mode = render_mode
         self.n_gates     = n_gates
         self.difficulty  = float(np.clip(difficulty, 0.0, 1.0))
+
+        # Load track layout
+        layout_name = layout or self.DEFAULT_LAYOUT
+        lay = self.LAYOUTS[layout_name]
+        self.SLOPE_LENGTH   = lay["slope_length"]
+        self.gate_start     = lay["gate_start"]
+        self.gate_end       = lay["gate_end"]
+        self.MAX_STEPS_EASY = lay["max_steps_easy"]
+        self.MAX_STEPS_HARD = lay["max_steps_hard"]
 
         self.observation_space = spaces.Box(
             low=np.full(15, -5.0, dtype=np.float32),
@@ -300,9 +326,12 @@ class SkiEnv(gym.Env):
 
         # --- Priority 4: Gates (secondary to survival/finish) ---
 
-        # 4a. Alignment toward next gate (light shaping)
-        gx = self._next_gate_x(y)
-        alignment_weight = 0.03 + 0.03 * self.difficulty
+        # 4a. Alignment toward next gate (light shaping, proximity-gated)
+        #     Full strength within 15m of gate, fades to zero at 30m+
+        gx, gy = self._next_gate(y)
+        dist_to_gate = max(gy - y, 0.0)
+        proximity = max(0.0, 1.0 - dist_to_gate / 30.0)  # 1.0 at gate, 0.0 at 30m+
+        alignment_weight = (0.03 + 0.03 * self.difficulty) * proximity
         reward -= alignment_weight * abs(x - gx) * self.DT
 
         # 4b. Gate outcome (sparse)
@@ -329,8 +358,7 @@ class SkiEnv(gym.Env):
 
     def _generate_gates(self):
         # Gates from y=30 to y=130 on a 160m slope
-        # 30m lead-in before first gate, 30m after last gate to finish
-        ys = np.linspace(30, self.SLOPE_LENGTH - 30, self.n_gates)
+        ys = np.linspace(self.gate_start, self.gate_end, self.n_gates)
         offset = self.gate_offset
         xs = np.array([
             offset * (1 if i % 2 == 0 else -1)
@@ -355,11 +383,15 @@ class SkiEnv(gym.Env):
                     reward -= self.gate_miss_penalty
         return reward
 
-    def _next_gate_x(self, y):
+    def _next_gate(self, y):
+        """Return (gx, gy) of next upcoming gate, or (0, SLOPE_LENGTH) if none."""
         for i, (gy, gx) in enumerate(self.gates):
             if not self.gates_passed[i] and not self.gates_missed[i] and gy > y:
-                return gx
-        return 0.0
+                return gx, gy
+        return 0.0, self.SLOPE_LENGTH
+
+    def _next_gate_x(self, y):
+        return self._next_gate(y)[0]
 
     # ------------------------------------------------------------------
     # Observation (15D)
@@ -431,11 +463,19 @@ class SkiEnv(gym.Env):
             print("pip install pygame")
             return None
 
-        W, H = 600, 520
         TRACK_TOP = 60
-        TRACK_H   = 400
+        MARGIN_BOTTOM = 60
         if self.screen is None:
             pygame.init()
+        # Use screen height to determine window size
+        display_info = pygame.display.Info()
+        MAX_H = display_info.current_h - 80  # leave room for taskbar/title bar
+        H = MAX_H
+        TRACK_H = H - TRACK_TOP - MARGIN_BOTTOM
+        # Scale width to preserve slope aspect ratio (track_width * 2 vs slope_length)
+        aspect = (self.TRACK_WIDTH * 2) / self.SLOPE_LENGTH
+        W = max(400, min(int(TRACK_H * aspect * 2.5), display_info.current_w - 100))
+        if self.screen is None:
             if self.render_mode == "human":
                 self.screen = pygame.display.set_mode((W, H))
                 pygame.display.set_caption("Ski RL — Competition Slalom v2")
