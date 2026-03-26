@@ -25,5 +25,8 @@ __MACOSX/
 project_proposal.docx
 *.pdf
 
+# RL checkpoints
+Enora/checkpoints_v3/
+
 # OS
 Thumbs.db
