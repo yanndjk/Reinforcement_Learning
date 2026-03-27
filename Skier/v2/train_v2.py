@@ -25,8 +25,8 @@ import matplotlib.pyplot as plt
 # Local imports
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
-from envs.ski_env_v3 import SkiEnv
-from agents.ppo_agent_v3 import ActorCritic, RolloutBuffer, ppo_update
+from envs.ski_env_v2 import SkiEnv
+from agents.ppo_agent_v2 import ActorCritic, RolloutBuffer, ppo_update
 
 # Track layout — set via --layout CLI flag (default: "wide")
 LAYOUT = None
